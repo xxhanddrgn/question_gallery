@@ -1,0 +1,14 @@
+{
+  "name": "question-gallery",
+  "version": "1.0.0",
+  "description": "학생 질문 챌린지 - 매일 하루 한 개 질문 올리기",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "express": "^4.21.0"
+  }
+}
