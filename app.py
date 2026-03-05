@@ -891,7 +891,6 @@ def reset_hall():
 # -- Topic API --
 
 @app.route('/api/topic')
-@login_required
 def get_topic():
     conn = get_db()
     topic = get_setting(conn, 'current_topic', '')

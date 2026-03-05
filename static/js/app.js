@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupHomeButton();
     setupAdminModeExit();  // Feature 3
     updateDateDisplay();
+    loadTopicOnLogin();  // Load topic on login screen too
 
     setInterval(() => {
         if (document.getElementById('main-screen').style.display !== 'none') {
@@ -226,7 +227,20 @@ function setupAdminModeExit() {
     }
 }
 
-// Topic
+// Topic - show on login screen (no auth needed)
+async function loadTopicOnLogin() {
+    try {
+        const data = await api('/api/topic');
+        const loginTopic = document.getElementById('login-topic');
+        const loginTopicName = document.getElementById('login-topic-name');
+        if (data.topic && loginTopic && loginTopicName) {
+            loginTopicName.textContent = data.topic;
+            loginTopic.style.display = 'block';
+        }
+    } catch (err) {}
+}
+
+// Topic - show on main screen
 async function loadTopic() {
     try {
         const data = await api('/api/topic');
