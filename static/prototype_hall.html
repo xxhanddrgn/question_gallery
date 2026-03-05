@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>명예의 전당 프로토타입</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Gowun Dodum', sans-serif; background: #FFFBF5; color: #2D2424; min-height: 100vh; display: flex; justify-content: center; }
+        .container { max-width: 420px; width: 100%; }
+        .heading { font-family: 'Jua', sans-serif; }
+
+        /* Header */
+        .hall-header {
+            background: linear-gradient(135deg, #FFB87A, #FF9B9B, #FFE78A);
+            padding: 32px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hall-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.3) 1px, transparent 1px),
+                        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.3) 1px, transparent 1px);
+            background-size: 60px 60px, 80px 80px;
+        }
+        .hall-header h1 { font-family: 'Jua', sans-serif; font-size: 28px; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2); position: relative; z-index: 1; }
+        .hall-header p { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 4px; position: relative; z-index: 1; font-weight: 600; }
+        .hall-header .trophy { font-size: 48px; margin-bottom: 8px; position: relative; z-index: 1; }
+
+        /* Podium */
+        .podium { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+        .rank-card { border-radius: 16px; padding: 16px; text-align: center; }
+
+        /* 1st - Gold */
+        .rank-1 {
+            background: linear-gradient(135deg, #FFE082, #FFD54F, #FFCA28);
+            box-shadow: 0 4px 15px rgba(255, 202, 40, 0.5);
+        }
+        .rank-1 .rank-label { color: #5C3300; }
+        .rank-1 .rank-count { color: rgba(92, 51, 0, 0.7); }
+        .rank-1 .student-card { background: rgba(92, 51, 0, 0.3); border-radius: 12px; padding: 8px 16px; }
+        .rank-1 .student-name { color: #3A1F00; font-size: 14px; font-weight: bold; }
+        .rank-1 .student-count { color: #5C3300; font-size: 12px; }
+
+        /* 2nd - Blue */
+        .rank-2 {
+            background: linear-gradient(135deg, #A8D8EA, #6CB4EE);
+            box-shadow: 0 3px 12px rgba(108, 180, 238, 0.3);
+        }
+        .rank-2 .rank-label, .rank-2 .student-name { color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+        .rank-2 .rank-count { color: rgba(255,255,255,0.7); }
+        .rank-2 .student-card { background: rgba(255,255,255,0.3); backdrop-filter: blur(4px); border-radius: 12px; padding: 8px 16px; }
+        .rank-2 .student-name { font-size: 14px; font-weight: bold; }
+        .rank-2 .student-count { color: rgba(255,255,255,0.8); font-size: 12px; }
+
+        /* 3rd - Pink */
+        .rank-3 {
+            background: linear-gradient(135deg, #FFB7C5, #FF85A2);
+            box-shadow: 0 3px 10px rgba(255, 133, 162, 0.3);
+        }
+        .rank-3 .rank-label, .rank-3 .student-name { color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+        .rank-3 .rank-count { color: rgba(255,255,255,0.7); }
+        .rank-3 .student-card { background: rgba(255,255,255,0.3); backdrop-filter: blur(4px); border-radius: 12px; padding: 8px 16px; }
+        .rank-3 .student-name { font-size: 14px; font-weight: bold; }
+        .rank-3 .student-count { color: rgba(255,255,255,0.8); font-size: 12px; }
+
+        .rank-icon { font-size: 24px; margin-bottom: 4px; }
+        .rank-label { font-family: 'Jua', sans-serif; font-size: 18px; font-weight: bold; }
+        .rank-count { font-family: 'Gowun Dodum', sans-serif; font-size: 13px; margin-left: 4px; }
+        .students-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
+
+        /* 4th and below */
+        .rest-list { padding: 0 16px 40px; display: flex; flex-direction: column; gap: 8px; }
+        .rest-card {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid rgba(255, 232, 204, 0.2);
+        }
+        .rest-card.is-me {
+            border-left: 4px solid #FFB87A;
+            background: #FFFBF5;
+        }
+        .rest-rank { font-family: 'Jua', sans-serif; font-size: 18px; color: #8E7E7E; min-width: 35px; text-align: center; }
+        .grade-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: bold; color: white;
+        }
+        .grade-3-bg { background: linear-gradient(135deg, #7FE3FA, #4CC9F0); }
+        .grade-4-bg { background: linear-gradient(135deg, #FFBEF7, #FF8AE2); }
+        .grade-5-bg { background: linear-gradient(135deg, #89BFFF, #5B9CF0); }
+        .grade-6-bg { background: linear-gradient(135deg, #C0BBFE, #9B8FFF); }
+        .rest-name { font-size: 14px; font-weight: bold; flex: 1; }
+        .rest-qcount { font-size: 14px; font-weight: bold; color: #FFB87A; }
+
+        /* Labels */
+        .section-label {
+            padding: 8px 16px;
+            font-family: 'Jua', sans-serif;
+            font-size: 14px;
+            color: #8E7E7E;
+        }
+
+        /* Annotation arrows */
+        .annotation-wrapper { position: relative; }
+        .annotation {
+            position: absolute;
+            right: -8px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #FF6B6B;
+            background: #FFF0F0;
+            border: 2px solid #FF6B6B;
+            border-radius: 8px;
+            padding: 3px 8px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .annotation::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-right-color: #FF6B6B;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="hall-header">
+            <div class="trophy">&#127942;</div>
+            <h1>명예의 전당</h1>
+            <p>누적 질문 수 기준 우리 학교 질문왕 순위</p>
+        </div>
+
+        <!-- Podium -->
+        <div class="podium">
+            <!-- 1st Place - GOLD -->
+            <div class="rank-card rank-1 annotation-wrapper">
+                <div class="annotation" style="top: 12px;">금색 배경 + 학생 수 표시</div>
+                <div class="rank-icon">&#127942;</div>
+                <div><span class="rank-label">1등</span> <span class="rank-count">3명</span></div>
+                <div class="students-row">
+                    <div class="student-card">
+                        <div class="student-name">3-2 김민준</div>
+                        <div class="student-count">42개</div>
+                    </div>
+                    <div class="student-card">
+                        <div class="student-name">5-1 이서윤</div>
+                        <div class="student-count">42개</div>
+                    </div>
+                    <div class="student-card">
+                        <div class="student-name">4-3 박하은</div>
+                        <div class="student-count">42개</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2nd Place - BLUE -->
+            <div class="rank-card rank-2 annotation-wrapper">
+                <div class="annotation" style="top: 12px;">하늘색 배경</div>
+                <div class="rank-icon">&#129352;</div>
+                <div><span class="rank-label">2등</span> <span class="rank-count">2명</span></div>
+                <div class="students-row">
+                    <div class="student-card">
+                        <div class="student-name">6-1 정예준</div>
+                        <div class="student-count">38개</div>
+                    </div>
+                    <div class="student-card">
+                        <div class="student-name">4-2 최수아</div>
+                        <div class="student-count">38개</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3rd Place - PINK -->
+            <div class="rank-card rank-3 annotation-wrapper">
+                <div class="annotation" style="top: 12px;">핑크색 배경</div>
+                <div class="rank-icon">&#129353;</div>
+                <div><span class="rank-label">3등</span> <span class="rank-count">1명</span></div>
+                <div class="students-row">
+                    <div class="student-card">
+                        <div class="student-name">5-3 한지호</div>
+                        <div class="student-count">35개</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-label">&#9660; 4등 이하 - 흰색 리스트 카드</div>
+
+        <!-- 4th and below - White list -->
+        <div class="rest-list">
+            <div class="rest-card annotation-wrapper">
+                <div class="annotation" style="top: -2px; right: -8px;">흰색 카드 + 학년 아이콘</div>
+                <span class="rest-rank">4</span>
+                <div class="grade-avatar grade-3-bg">3</div>
+                <span class="rest-name">3-1 오지민</span>
+                <span class="rest-qcount">32개</span>
+            </div>
+            <div class="rest-card">
+                <span class="rest-rank">5</span>
+                <div class="grade-avatar grade-6-bg">6</div>
+                <span class="rest-name">6-2 송도윤</span>
+                <span class="rest-qcount">30개</span>
+            </div>
+            <div class="rest-card is-me annotation-wrapper">
+                <div class="annotation" style="top: -2px; right: -8px;">본인은 주황 테두리 강조</div>
+                <span class="rest-rank">6</span>
+                <div class="grade-avatar grade-4-bg">4</div>
+                <span class="rest-name">4-1 나 (본인)</span>
+                <span class="rest-qcount">28개</span>
+            </div>
+            <div class="rest-card">
+                <span class="rest-rank">7</span>
+                <div class="grade-avatar grade-5-bg">5</div>
+                <span class="rest-name">5-2 윤서진</span>
+                <span class="rest-qcount">25개</span>
+            </div>
+            <div class="rest-card">
+                <span class="rest-rank">8</span>
+                <div class="grade-avatar grade-3-bg">3</div>
+                <span class="rest-name">3-3 임하린</span>
+                <span class="rest-qcount">22개</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
