@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 - 하루 한 개 질문 챌린지</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'pastel-orange': '#FFB87A',
+                    'pastel-coral': '#FF9B9B',
+                    'pastel-yellow': '#FFE78A',
+                    'pastel-green': '#8FE6B0',
+                    'pastel-sky': '#8FC9F9',
+                    'pastel-purple': '#C5B5E8',
+                    'cream': '#FFFBF5',
+                    'cream-dark': '#FFF3E0',
+                    'txt': '#2D2424',
+                    'txt-light': '#5C4E4E',
+                    'txt-lighter': '#8E7E7E',
+                },
+                fontFamily: {
+                    heading: ['"Jua"', 'sans-serif'],
+                    body: ['"Gowun Dodum"', 'sans-serif'],
+                }
+            }
+        }
+    }
+    </script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="font-body bg-cream text-txt min-h-screen">
+    <!-- Login -->
+    <div id="admin-login-screen" class="min-h-screen flex items-center justify-center p-6">
+        <form id="admin-login-form" class="w-full max-w-[380px] bg-white p-7 rounded-2xl shadow-lg border-2 border-[#FFE0B2]">
+            <h2 class="text-2xl font-heading text-center mb-5 text-[#D05A00]">관리자 로그인</h2>
+            <div class="mb-4">
+                <label for="admin-username" class="block text-sm font-bold text-txt-light mb-1.5">아이디</label>
+                <input type="text" id="admin-username" required class="w-full px-3.5 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+            </div>
+            <div class="mb-5">
+                <label for="admin-password" class="block text-sm font-bold text-txt-light mb-1.5">비밀번호</label>
+                <input type="password" id="admin-password" required class="w-full px-3.5 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+            </div>
+            <button type="submit" class="w-full py-3.5 text-lg font-heading bg-gradient-to-r from-pastel-orange to-pastel-coral text-white rounded-full shadow-md hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 transition-all">로그인</button>
+            <a href="/" class="block text-center mt-4 text-sm text-txt-lighter hover:text-txt-light transition no-underline">학생 페이지로</a>
+        </form>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="admin-dashboard" class="max-w-[900px] mx-auto p-4 pb-10" style="display:none">
+        <div class="flex items-center justify-between mb-5">
+            <h1 class="text-2xl font-heading text-[#D05A00]">관리자 대시보드</h1>
+            <div class="flex gap-2">
+                <button id="admin-student-mode-btn" class="px-4 py-2 bg-pastel-sky text-white rounded-xl text-sm font-bold hover:opacity-90 transition" onclick="enterStudentMode()">학생 페이지 관리</button>
+                <button id="admin-logout-btn" class="px-4 py-2 bg-pastel-coral text-white rounded-xl text-sm font-bold hover:opacity-90 transition">로그아웃</button>
+            </div>
+        </div>
+
+        <!-- Topic Setting -->
+        <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+            <h3 class="text-base font-heading font-bold mb-3">시즌 주제 설정</h3>
+            <div class="flex gap-2">
+                <input type="text" id="topic-input" maxlength="50" placeholder="주제를 입력하세요" class="flex-1 px-3.5 py-2.5 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange transition">
+                <button onclick="saveTopic()" class="px-5 py-2.5 bg-pastel-green text-white rounded-xl text-sm font-bold hover:opacity-90 transition">저장</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            <div class="bg-white rounded-2xl shadow-md p-4 text-center border border-[#FFE8CC]/30">
+                <div class="text-2xl font-heading font-bold text-pastel-orange" id="stat-students">0</div>
+                <div class="text-xs text-txt-light font-bold">전체 참여 학생</div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-md p-4 text-center border border-[#FFE8CC]/30">
+                <div class="text-2xl font-heading font-bold text-pastel-coral" id="stat-questions">0</div>
+                <div class="text-xs text-txt-light font-bold">전체 질문 수</div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-md p-4 text-center border border-[#FFE8CC]/30">
+                <div class="text-2xl font-heading font-bold text-pastel-green" id="stat-today">0</div>
+                <div class="text-xs text-txt-light font-bold">오늘 질문 수</div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-md p-4 text-center border border-[#FFE8CC]/30">
+                <div class="text-2xl font-heading font-bold text-pastel-purple" id="stat-likes">0</div>
+                <div class="text-xs text-txt-light font-bold">전체 좋아요 수</div>
+            </div>
+        </div>
+
+        <!-- Grade Stats -->
+        <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+            <h3 class="text-base font-heading font-bold mb-3">학년별 참여 현황</h3>
+            <div id="grade-stats"></div>
+        </div>
+
+        <!-- Top Questions -->
+        <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+            <h3 class="text-base font-heading font-bold mb-3">인기 질문 TOP 10</h3>
+            <div id="top-questions"></div>
+        </div>
+
+        <!-- Hall Reset -->
+        <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+            <h3 class="text-base font-heading font-bold mb-3">명예의 전당 관리</h3>
+            <p class="text-sm text-txt-light mb-3">명예의 전당 순위를 초기화합니다. 기존 질문과 좋아요는 유지됩니다.</p>
+            <button onclick="resetHallOfFame()" class="px-5 py-2.5 bg-pastel-coral text-white rounded-xl text-sm font-bold hover:opacity-90 transition">명예의 전당 초기화</button>
+        </div>
+
+        <!-- PIN Management -->
+        <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+            <h3 class="text-base font-heading font-bold mb-3">학생 비밀번호 관리</h3>
+            <div class="flex gap-2 mb-3">
+                <button onclick="generatePins('no_pin')" class="px-4 py-2 bg-pastel-sky text-white rounded-xl text-sm font-bold hover:opacity-90 transition">미설정 학생 PIN 생성</button>
+                <button onclick="generatePins('all')" class="px-4 py-2 bg-pastel-purple text-white rounded-xl text-sm font-bold hover:opacity-90 transition">전체 PIN 재생성</button>
+            </div>
+
+            <!-- Custom PIN Setting -->
+            <div class="flex items-center gap-2 mb-3 p-3 bg-cream rounded-xl">
+                <label class="flex items-center gap-1.5 cursor-pointer text-sm font-bold">
+                    <input type="checkbox" id="select-all-students" onchange="toggleSelectAllStudents(this)" class="w-4 h-4 cursor-pointer"> 전체 선택
+                </label>
+                <span id="pin-selected-count" class="text-xs text-txt-light">0명 선택</span>
+                <div class="ml-auto flex gap-1.5 items-center">
+                    <input type="text" id="custom-pin" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="4자리" class="w-20 px-2.5 py-1.5 border-2 border-[#FFE0B2] rounded-lg text-sm text-center font-body bg-white focus:outline-none focus:border-pastel-orange transition">
+                    <button onclick="setCustomPins()" class="bg-pastel-orange text-white border-none px-3 py-1.5 rounded-lg text-xs font-bold font-body cursor-pointer hover:opacity-90 transition">설정</button>
+                </div>
+            </div>
+
+            <!-- Student Filters -->
+            <div class="flex gap-2 mb-3">
+                <select id="filter-grade" class="px-3 py-2 border-2 border-[#FFE0B2] rounded-xl text-sm font-body bg-white focus:outline-none focus:border-pastel-orange transition">
+                    <option value="">전체 학년</option>
+                    <option value="1">1학년</option>
+                    <option value="2">2학년</option>
+                    <option value="3">3학년</option>
+                    <option value="4">4학년</option>
+                    <option value="5">5학년</option>
+                    <option value="6">6학년</option>
+                </select>
+                <input type="text" id="filter-name" placeholder="이름 검색" class="flex-1 px-3 py-2 border-2 border-[#FFE0B2] rounded-xl text-sm font-body bg-white focus:outline-none focus:border-pastel-orange transition">
+            </div>
+
+            <div id="student-list" class="max-h-[400px] overflow-y-auto"></div>
+        </div>
+
+        <!-- Export -->
+        <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+            <h3 class="text-base font-heading font-bold mb-3">데이터 내보내기 (CSV)</h3>
+            <div class="flex gap-2 mb-3 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-bold text-txt-light">시작</label>
+                    <input type="date" id="export-start" class="px-3 py-2 border-2 border-[#FFE0B2] rounded-xl text-sm font-body bg-white focus:outline-none focus:border-pastel-orange transition">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-bold text-txt-light">종료</label>
+                    <input type="date" id="export-end" class="px-3 py-2 border-2 border-[#FFE0B2] rounded-xl text-sm font-body bg-white focus:outline-none focus:border-pastel-orange transition">
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="downloadExcel('questions')" class="px-5 py-2.5 bg-pastel-green text-white rounded-xl text-sm font-bold hover:opacity-90 transition">질문 데이터</button>
+                <button onclick="downloadExcel('students')" class="px-5 py-2.5 bg-pastel-sky text-white rounded-xl text-sm font-bold hover:opacity-90 transition">학생 통계</button>
+            </div>
+        </div>
+
+        <!-- Question Management -->
+        <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+            <h3 class="text-base font-heading font-bold mb-3">질문 관리</h3>
+            <input type="date" id="admin-date" class="px-3 py-2 border-2 border-[#FFE0B2] rounded-xl text-sm font-body bg-white focus:outline-none focus:border-pastel-orange transition mb-3">
+            <div id="admin-questions-list"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>
