@@ -45,10 +45,9 @@
 
 /* Rank badges */
 .rank-badge-1 {
-    background: linear-gradient(135deg, #FFD700, #FFA500);
+    background: linear-gradient(135deg, #FFE082, #FFD54F, #FFCA28);
     animation: shimmer 3s infinite, gentlePulse 2s infinite;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    box-shadow: 0 4px 15px rgba(255, 202, 40, 0.5);
 }
 
 .rank-badge-2 {

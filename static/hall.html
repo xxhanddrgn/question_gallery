@@ -41,7 +41,7 @@
         <div class="hall-header px-5 py-8 text-center">
             <div class="relative z-10">
                 <a href="/" class="inline-block text-left text-sm font-bold text-white/80 hover:text-white transition no-underline mb-3">&lt; 돌아가기</a>
-                <div class="text-5xl mb-2">&#9734;</div>
+                <div class="text-5xl mb-2">&#127942;</div>
                 <h1 class="text-3xl font-heading text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">명예의 전당</h1>
                 <p class="text-sm text-white/80 mt-1 font-semibold">누적 질문 수 기준 우리 학교 질문왕 순위</p>
             </div>
@@ -55,7 +55,7 @@
 
         <!-- Empty State -->
         <div id="empty-ranking" class="text-center py-16 px-5" style="display:none">
-            <div class="text-5xl mb-3">&#9734;</div>
+            <div class="text-5xl mb-3">&#127942;</div>
             <p class="text-base font-bold text-txt-light">아직 순위가 없어요</p>
             <p class="text-sm text-txt-lighter mt-1">질문을 올리면 순위에 반영됩니다!</p>
         </div>
@@ -105,15 +105,17 @@
             [1, 2, 3].forEach(rank => {
                 if (!grouped[rank]) return;
                 const badges = ['rank-badge-1', 'rank-badge-2', 'rank-badge-3'];
-                const labels = ['1st', '2nd', '3rd'];
+                const labels = ['1등', '2등', '3등'];
+                const icons = ['\u{1F3C6}', '\u{1F948}', '\u{1F949}'];
                 podiumHtml += `
                     <div class="${badges[rank-1]} rounded-2xl p-4 text-center">
-                        <div class="text-lg font-heading font-bold text-white mb-2">${labels[rank-1]}</div>
+                        <div class="text-2xl mb-1">${icons[rank-1]}</div>
+                        <div class="text-lg font-heading font-bold ${rank === 1 ? 'text-[#5C3300]' : 'text-white'} mb-2">${labels[rank-1]}</div>
                         <div class="flex flex-wrap justify-center gap-2">
                             ${grouped[rank].map(r => `
-                                <div class="bg-white/30 backdrop-blur-sm rounded-xl px-4 py-2 ${r.is_me ? 'ring-2 ring-white' : ''}">
-                                    <div class="text-sm font-bold text-white">${r.grade}-${r.class_num} ${escapeHtml(r.name)}</div>
-                                    <div class="text-xs text-white/80">${r.question_count}개</div>
+                                <div class="${rank === 1 ? 'bg-[#5C3300]/30' : 'bg-white/30'} backdrop-blur-sm rounded-xl px-4 py-2 ${r.is_me ? 'ring-2 ring-white' : ''}">
+                                    <div class="text-sm font-bold ${rank === 1 ? 'text-[#3A1F00]' : 'text-white'}">${r.grade}-${r.class_num} ${escapeHtml(r.name)}</div>
+                                    <div class="text-xs ${rank === 1 ? 'text-[#5C3300]' : 'text-white/80'}">${r.question_count}개</div>
                                 </div>
                             `).join('')}
                         </div>

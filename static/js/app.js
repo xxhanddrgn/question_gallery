@@ -230,9 +230,18 @@ function setupAdminModeExit() {
 async function loadTopic() {
     try {
         const data = await api('/api/topic');
+        const banner = document.getElementById('topic-banner');
+        const topicHint = document.getElementById('topic-hint');
         if (data.topic) {
             document.getElementById('topic-name').textContent = data.topic;
-            document.getElementById('topic-banner').style.display = 'block';
+            banner.style.display = 'block';
+            if (topicHint) {
+                topicHint.textContent = `이번 주제: ${data.topic}`;
+                topicHint.style.display = 'block';
+            }
+        } else {
+            banner.style.display = 'none';
+            if (topicHint) topicHint.style.display = 'none';
         }
     } catch (err) {
         console.error('토픽 로드 중 오류:', err);
