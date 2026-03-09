@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>하루 한 개 질문 챌린지 - 전체 데모</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'pastel-orange': '#FFB87A',
+                    'pastel-coral': '#FF9B9B',
+                    'pastel-yellow': '#FFE78A',
+                    'pastel-green': '#8FE6B0',
+                    'pastel-sky': '#8FC9F9',
+                    'pastel-purple': '#C5B5E8',
+                    'cream': '#FFFBF5',
+                    'cream-dark': '#FFF3E0',
+                    'txt': '#2D2424',
+                    'txt-light': '#5C4E4E',
+                    'txt-lighter': '#8E7E7E',
+                },
+                fontFamily: {
+                    heading: ['"Jua"', 'sans-serif'],
+                    body: ['"Gowun Dodum"', 'sans-serif'],
+                }
+            }
+        }
+    }
+    </script>
+    <style>
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes heartPop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+        @keyframes floatBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+        @keyframes gentlePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        @keyframes starTwinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .animate-slideUp { animation: slideUp 0.3s ease-out both; }
+        .animate-heartPop { animation: heartPop 0.3s ease-out; }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+
+        /* Navigation tabs */
+        .nav-tab { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; background: white; border-top: 2px solid #FFE0B2; display: flex; }
+        .nav-tab button { flex: 1; padding: 12px 0 max(12px, env(safe-area-inset-bottom)); font-family: 'Jua', sans-serif; font-size: 13px; border: none; background: white; color: #8E7E7E; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .nav-tab button.active { color: #D05A00; background: #FFF3E0; }
+        .nav-tab button:hover { background: #FFFBF5; }
+
+        /* Page containers */
+        .page { display: none; padding-bottom: 80px; }
+        .page.active { display: block; }
+
+        /* Rank badges */
+        .rank-badge-1 { background: linear-gradient(135deg, #FFE082, #FFD54F, #FFCA28); animation: shimmer 3s infinite, gentlePulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 202, 40, 0.5); }
+        .rank-badge-2 { background: linear-gradient(135deg, #4A90D9, #2B6CB0); animation: gentlePulse 2.5s infinite; text-shadow: 0 1px 3px rgba(0,0,0,0.3); box-shadow: 0 4px 15px rgba(43, 108, 176, 0.4); }
+        .rank-badge-3 { background: linear-gradient(135deg, #E8457A, #C4284D); animation: gentlePulse 3s infinite; text-shadow: 0 1px 3px rgba(0,0,0,0.3); box-shadow: 0 4px 12px rgba(196, 40, 77, 0.4); }
+
+        /* Grade avatars */
+        .grade-1 { background: linear-gradient(135deg, #FF9B9B, #FF6B6B); }
+        .grade-2 { background: linear-gradient(135deg, #FFE08A, #FFD054); }
+        .grade-3 { background: linear-gradient(135deg, #7FE3FA, #4CC9F0); }
+        .grade-4 { background: linear-gradient(135deg, #FFBEF7, #FF8AE2); }
+        .grade-5 { background: linear-gradient(135deg, #89BFFF, #5B9CF0); }
+        .grade-6 { background: linear-gradient(135deg, #C0BBFE, #9B8FFF); }
+
+        /* Toast */
+        .toast { position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; color: white; z-index: 9999; transition: bottom 0.3s ease; white-space: nowrap; }
+        .toast.show { bottom: 90px; }
+        .toast.success { background: linear-gradient(135deg, #8FE6B0, #5CD08A); box-shadow: 0 4px 15px rgba(92, 208, 138, 0.4); }
+        .toast.error { background: linear-gradient(135deg, #FF9B9B, #FF6B6B); box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4); }
+
+        /* Hall header */
+        .hall-header { background: linear-gradient(135deg, #FFB87A, #FF9B9B, #FFE78A); position: relative; overflow: hidden; }
+        .hall-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.3) 1px, transparent 1px), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.3) 1px, transparent 1px); background-size: 60px 60px, 80px 80px; animation: starTwinkle 3s infinite alternate; }
+
+        /* Topic banner */
+        .topic-banner { background: linear-gradient(135deg, #2D8B46, #1A6B30); box-shadow: 0 6px 20px rgba(45, 139, 70, 0.3); }
+
+        /* Grade bar */
+        .grade-bar-fill { transition: width 0.6s ease-out; }
+
+        /* Demo indicator */
+        .demo-indicator { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: linear-gradient(135deg, #D05A00, #B04800); color: white; text-align: center; padding: 6px; font-family: 'Jua', sans-serif; font-size: 13px; }
+        .demo-indicator span { background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 20px; font-size: 11px; margin-left: 6px; }
+
+        /* Flow arrow animation */
+        .flow-arrow { display: inline-block; animation: floatBounce 1.5s infinite; }
+
+        body { padding-top: 32px; }
+
+        /* PIN input */
+        #demo-pin { letter-spacing: 8px; text-align: center; font-size: 1.25rem; }
+
+        input[type="checkbox"] { accent-color: #FFB87A; }
+    </style>
+</head>
+<body class="font-body bg-cream text-txt min-h-screen antialiased">
+
+    <!-- Demo Mode Indicator -->
+    <div class="demo-indicator">
+        데모 모드 - 샘플 데이터로 구동 중 <span>서버 불필요</span>
+    </div>
+
+    <!-- ==================== PAGE 1: LOGIN ==================== -->
+    <div id="page-login" class="page active">
+        <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#FFF5EB] via-[#FFECD2] to-[#FFD8CC] relative overflow-hidden">
+            <div class="text-center mb-7 relative">
+                <p class="text-xs font-bold text-[#A04800] bg-[#FFE8CC] inline-block px-4 py-1 rounded-full mb-3 tracking-wide">대전원앙초등학교</p>
+                <h1 class="text-4xl sm:text-5xl font-heading leading-tight text-[#D05A00] drop-shadow-[0_2px_4px_rgba(208,90,0,0.25)]">하루 한 개 질문<br>챌린지</h1>
+                <p class="text-base text-txt-light mt-2 font-semibold">매일 하나의 질문으로 세상을 탐구해요!</p>
+                <div class="mt-3 px-4 py-2 rounded-xl bg-[#2D8B46]/10 border border-[#2D8B46]/20">
+                    <span class="text-xs font-bold text-[#2D8B46]">이번 주제</span>
+                    <div class="text-lg font-heading font-bold text-[#2D8B46]">우리 주변의 과학</div>
+                </div>
+            </div>
+            <form id="login-form" class="w-full max-w-[400px] bg-white p-7 rounded-2xl shadow-lg border-2 border-[#FFE0B2]">
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <div>
+                        <label class="block text-sm font-bold text-txt-light mb-1.5">학년</label>
+                        <select id="demo-grade" required class="w-full px-3 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+                            <option value="">선택</option>
+                            <option value="3" selected>3학년</option>
+                            <option value="1">1학년</option>
+                            <option value="2">2학년</option>
+                            <option value="4">4학년</option>
+                            <option value="5">5학년</option>
+                            <option value="6">6학년</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-txt-light mb-1.5">반</label>
+                        <input type="number" id="demo-class" value="2" min="1" max="20" class="w-full px-3 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-txt-light mb-1.5">번호</label>
+                        <input type="number" id="demo-num" value="7" min="1" max="50" class="w-full px-3 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-txt-light mb-1.5">이름</label>
+                    <input type="text" id="demo-name" value="김하늘" placeholder="이름을 입력하세요" required maxlength="10" class="w-full px-3.5 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+                </div>
+                <div id="pin-section" class="mb-4" style="display:none">
+                    <label class="block text-sm font-bold text-txt-light mb-1.5">비밀번호 (숫자 4자리)</label>
+                    <input type="password" id="demo-pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="숫자 4자리 입력" class="w-full px-3.5 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+                    <p class="text-xs text-txt-light mt-1.5">이전에 설정한 비밀번호를 입력하세요</p>
+                </div>
+                <button type="submit" class="w-full py-3.5 text-lg font-heading bg-gradient-to-r from-pastel-orange to-pastel-coral text-white rounded-full shadow-md hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 transition-all">
+                    다음
+                </button>
+            </form>
+            <button onclick="showPage('page-admin')" class="block text-center mt-5 text-xs text-txt-lighter/40 hover:text-txt-lighter transition cursor-pointer bg-transparent border-none">관리자</button>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 2: MAIN (QUESTIONS) ==================== -->
+    <div id="page-main" class="page">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-[#E08A50] to-[#D87070] sticky top-8 z-50 shadow-md">
+            <div class="max-w-[600px] mx-auto px-4 py-3 flex items-center justify-between">
+                <h1 class="font-heading text-lg text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">하루 한 개 질문</h1>
+                <div class="flex items-center gap-2">
+                    <span id="user-info" class="text-xs bg-white/30 px-2.5 py-1 rounded-full font-bold text-white">3-2 김하늘</span>
+                    <button onclick="showPage('page-main');loadQuestions();" class="text-xs px-2.5 py-1 rounded-lg bg-white/30 border border-white/50 text-white font-bold whitespace-nowrap hover:bg-white/45 transition">홈</button>
+                    <button onclick="showPage('page-hall')" class="text-xs px-2.5 py-1 rounded-lg bg-pastel-yellow text-[#6D4C00] font-bold whitespace-nowrap hover:scale-105 transition">명예의 전당</button>
+                    <button onclick="showPage('page-login')" class="text-xs px-2.5 py-1 rounded-lg bg-white/20 border border-white/50 text-white font-bold hover:bg-white/35 transition">로그아웃</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-[600px] mx-auto p-4">
+            <!-- Date Navigation -->
+            <div class="flex items-center justify-center gap-3 py-3 mb-3">
+                <button onclick="changeDate(-1)" class="w-9 h-9 border-2 border-[#FFD0A0] bg-white rounded-full text-base font-bold text-txt-light flex items-center justify-center hover:border-pastel-orange hover:text-pastel-orange hover:bg-cream-dark transition">&lt;</button>
+                <div class="flex items-center gap-2 text-base font-bold text-txt">
+                    <span id="current-date-text">3월 9일 (일) - 오늘</span>
+                </div>
+                <button id="next-date-btn" onclick="changeDate(1)" class="w-9 h-9 border-2 border-[#FFD0A0] bg-white rounded-full text-base font-bold text-txt-light flex items-center justify-center hover:border-pastel-orange hover:text-pastel-orange hover:bg-cream-dark transition disabled:opacity-30 disabled:cursor-not-allowed" disabled>&gt;</button>
+            </div>
+
+            <!-- Topic Banner -->
+            <div class="topic-banner relative rounded-2xl mb-4 overflow-hidden">
+                <div class="relative z-10 px-5 py-4 text-center">
+                    <div class="inline-block px-5 py-1 rounded-full bg-white/25 backdrop-blur-sm text-sm font-bold text-white tracking-widest mb-2 border border-white/30 shadow-sm">이번 시즌 주제</div>
+                    <div class="text-3xl sm:text-4xl font-heading font-bold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]">우리 주변의 과학</div>
+                </div>
+            </div>
+
+            <!-- Question Form -->
+            <div id="question-form-container" class="bg-gradient-to-br from-[#FFFDE7] to-[#FFF9C4] border-2 border-pastel-yellow rounded-2xl shadow-lg p-5 mb-4" style="box-shadow: 0 6px 20px rgba(255,231,138,0.35), 0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);">
+                <div class="text-lg font-heading font-bold mb-1 text-txt">오늘의 질문을 올려보세요!</div>
+                <div class="text-sm font-bold text-[#2D8B46] bg-[#E8F5E9] inline-block px-3 py-1 rounded-full mb-3">주제: 우리 주변의 과학</div>
+                <form id="question-form" onsubmit="submitQuestion(event)">
+                    <div class="relative">
+                        <textarea id="question-content" placeholder="궁금한 것이 있나요? 어떤 질문이든 좋아요!" maxlength="200" rows="3" class="w-full p-3.5 border-2 border-[#FFE0B2] rounded-xl text-base font-body resize-none bg-white focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/15 transition" oninput="updateCharCount()"></textarea>
+                        <span id="char-count" class="absolute bottom-2.5 right-3 text-xs text-txt-lighter">0/200</span>
+                    </div>
+                    <button type="submit" class="w-full mt-2 py-3 text-base font-heading bg-gradient-to-r from-pastel-orange to-pastel-coral text-white rounded-full hover:-translate-y-0.5 active:translate-y-0 transition-all" style="box-shadow: 0 4px 15px rgba(255,155,155,0.4);">
+                        질문 올리기
+                    </button>
+                </form>
+            </div>
+
+            <div id="already-posted" class="bg-gradient-to-br from-[#E8F5E9] to-[#C8E6C9] border-2 border-pastel-green rounded-2xl shadow-md p-5 mb-4 text-center" style="display:none">
+                <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-pastel-green flex items-center justify-center text-white text-2xl font-heading">V</div>
+                <p class="font-bold text-base">오늘의 질문을 이미 올렸어요!</p>
+                <p class="text-sm text-txt-light mt-1">내일 또 멋진 질문을 기대할게요!</p>
+            </div>
+
+            <!-- Grade Filter + Sort -->
+            <div class="mb-3">
+                <div class="flex items-center gap-1.5 mb-2 flex-wrap">
+                    <span class="text-sm font-bold text-txt-light mr-1">학년</span>
+                    <button class="grade-filter-btn px-3 py-1 border-2 border-[#FFD0A0] bg-white rounded-full text-xs font-semibold font-body text-txt-light hover:border-pastel-orange hover:text-pastel-orange transition active" onclick="filterGrade('')" data-grade="">전체</button>
+                    <button class="grade-filter-btn px-3 py-1 border-2 border-[#FFD0A0] bg-white rounded-full text-xs font-semibold font-body text-txt-light hover:border-pastel-orange hover:text-pastel-orange transition" onclick="filterGrade('1')" data-grade="1">1</button>
+                    <button class="grade-filter-btn px-3 py-1 border-2 border-[#FFD0A0] bg-white rounded-full text-xs font-semibold font-body text-txt-light hover:border-pastel-orange hover:text-pastel-orange transition" onclick="filterGrade('2')" data-grade="2">2</button>
+                    <button class="grade-filter-btn px-3 py-1 border-2 border-[#FFD0A0] bg-white rounded-full text-xs font-semibold font-body text-txt-light hover:border-pastel-orange hover:text-pastel-orange transition" onclick="filterGrade('3')" data-grade="3">3</button>
+                    <button class="grade-filter-btn px-3 py-1 border-2 border-[#FFD0A0] bg-white rounded-full text-xs font-semibold font-body text-txt-light hover:border-pastel-orange hover:text-pastel-orange transition" onclick="filterGrade('4')" data-grade="4">4</button>
+                    <button class="grade-filter-btn px-3 py-1 border-2 border-[#FFD0A0] bg-white rounded-full text-xs font-semibold font-body text-txt-light hover:border-pastel-orange hover:text-pastel-orange transition" onclick="filterGrade('5')" data-grade="5">5</button>
+                    <button class="grade-filter-btn px-3 py-1 border-2 border-[#FFD0A0] bg-white rounded-full text-xs font-semibold font-body text-txt-light hover:border-pastel-orange hover:text-pastel-orange transition" onclick="filterGrade('6')" data-grade="6">6</button>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-base font-heading font-bold">질문 목록</span>
+                    <span id="question-count" class="text-xs bg-cream-dark text-[#A04800] px-3 py-0.5 rounded-full font-bold">8개</span>
+                    <div class="ml-auto flex gap-1">
+                        <button class="sort-btn px-3.5 py-1.5 border-2 border-[#FFD0A0] bg-white rounded-full text-sm font-semibold font-body text-txt-light hover:border-pastel-orange hover:text-pastel-orange transition active" onclick="sortQuestions('latest')" data-sort="latest">최신순</button>
+                        <button class="sort-btn px-3.5 py-1.5 border-2 border-[#FFD0A0] bg-white rounded-full text-sm font-semibold font-body text-txt-light hover:border-pastel-orange hover:text-pastel-orange transition" onclick="sortQuestions('likes')" data-sort="likes">인기순</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions List -->
+            <div id="questions-list" class="flex flex-col gap-3"></div>
+
+            <!-- Past Dates -->
+            <div class="mt-6 pb-10">
+                <button onclick="toggleDates()" class="w-full py-3 bg-transparent border-2 border-[#E0D0C0] rounded-xl text-sm font-bold font-body text-txt-light hover:border-pastel-orange hover:text-pastel-orange transition">
+                    지난 질문 보기
+                </button>
+                <div id="dates-list" class="mt-3 flex flex-col gap-1.5" style="display:none">
+                    <button onclick="goToDate(1)" class="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-[#FFE8CC]/20 hover:bg-cream-dark transition text-left">
+                        <span class="text-sm font-bold">3월 8일 (토)</span>
+                        <span class="text-xs bg-cream-dark text-[#A04800] px-2.5 py-0.5 rounded-full font-bold">12개</span>
+                    </button>
+                    <button onclick="goToDate(2)" class="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-[#FFE8CC]/20 hover:bg-cream-dark transition text-left">
+                        <span class="text-sm font-bold">3월 7일 (금)</span>
+                        <span class="text-xs bg-cream-dark text-[#A04800] px-2.5 py-0.5 rounded-full font-bold">15개</span>
+                    </button>
+                    <button onclick="goToDate(3)" class="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-[#FFE8CC]/20 hover:bg-cream-dark transition text-left">
+                        <span class="text-sm font-bold">3월 6일 (목)</span>
+                        <span class="text-xs bg-cream-dark text-[#A04800] px-2.5 py-0.5 rounded-full font-bold">9개</span>
+                    </button>
+                    <button onclick="goToDate(4)" class="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-[#FFE8CC]/20 hover:bg-cream-dark transition text-left">
+                        <span class="text-sm font-bold">3월 5일 (수)</span>
+                        <span class="text-xs bg-cream-dark text-[#A04800] px-2.5 py-0.5 rounded-full font-bold">11개</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== PAGE 3: HALL OF FAME ==================== -->
+    <div id="page-hall" class="page">
+        <div class="max-w-[600px] mx-auto">
+            <div class="hall-header px-5 py-8 text-center">
+                <div class="relative z-10">
+                    <button onclick="showPage('page-main')" class="inline-block text-left text-sm font-bold text-white/80 hover:text-white transition cursor-pointer bg-transparent border-none mb-3">&lt; 돌아가기</button>
+                    <div class="text-5xl mb-2">&#127942;</div>
+                    <h1 class="text-3xl font-heading text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">명예의 전당</h1>
+                    <p class="text-sm text-white/80 mt-1 font-semibold">누적 질문 수 기준 우리 학교 질문왕 순위</p>
+                </div>
+            </div>
+            <div id="podium" class="px-4 py-5"></div>
+            <div id="ranking-list" class="px-4 pb-10"></div>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 4: ADMIN ==================== -->
+    <div id="page-admin" class="page">
+        <!-- Admin Login -->
+        <div id="admin-login-screen" class="min-h-screen flex items-center justify-center p-6">
+            <form id="admin-login-form" class="w-full max-w-[380px] bg-white p-7 rounded-2xl shadow-lg border-2 border-[#FFE0B2]" onsubmit="adminLogin(event)">
+                <h2 class="text-2xl font-heading text-center mb-5 text-[#D05A00]">관리자 로그인</h2>
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-txt-light mb-1.5">아이디</label>
+                    <input type="text" value="admin" class="w-full px-3.5 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange transition">
+                </div>
+                <div class="mb-5">
+                    <label class="block text-sm font-bold text-txt-light mb-1.5">비밀번호</label>
+                    <input type="password" value="****" class="w-full px-3.5 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange transition">
+                </div>
+                <button type="submit" class="w-full py-3.5 text-lg font-heading bg-gradient-to-r from-pastel-orange to-pastel-coral text-white rounded-full shadow-md hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 transition-all">로그인</button>
+                <button type="button" onclick="showPage('page-login')" class="block w-full text-center mt-4 text-sm text-txt-lighter hover:text-txt-light transition cursor-pointer bg-transparent border-none">학생 페이지로</button>
+            </form>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="admin-dashboard" class="max-w-[900px] mx-auto p-4 pb-10" style="display:none">
+            <div class="flex items-center justify-between mb-5">
+                <h1 class="text-2xl font-heading text-[#D05A00]">관리자 대시보드</h1>
+                <div class="flex gap-2">
+                    <button onclick="enterStudentMode()" class="px-4 py-2 bg-pastel-sky text-white rounded-xl text-sm font-bold hover:opacity-90 transition">학생 페이지 관리</button>
+                    <button onclick="adminLogout()" class="px-4 py-2 bg-pastel-coral text-white rounded-xl text-sm font-bold hover:opacity-90 transition">로그아웃</button>
+                </div>
+            </div>
+
+            <!-- Topic Setting -->
+            <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+                <h3 class="text-base font-heading font-bold mb-3">시즌 주제 설정</h3>
+                <div class="flex gap-2">
+                    <input type="text" value="우리 주변의 과학" maxlength="50" class="flex-1 px-3.5 py-2.5 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange transition">
+                    <button onclick="showToast('주제가 저장되었습니다', 'success')" class="px-5 py-2.5 bg-pastel-green text-white rounded-xl text-sm font-bold hover:opacity-90 transition">저장</button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                <div class="bg-white rounded-2xl shadow-md p-4 text-center border border-[#FFE8CC]/30">
+                    <div class="text-2xl font-heading font-bold text-pastel-orange">47</div>
+                    <div class="text-xs text-txt-light font-bold">전체 참여 학생</div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-md p-4 text-center border border-[#FFE8CC]/30">
+                    <div class="text-2xl font-heading font-bold text-pastel-coral">156</div>
+                    <div class="text-xs text-txt-light font-bold">전체 질문 수</div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-md p-4 text-center border border-[#FFE8CC]/30">
+                    <div class="text-2xl font-heading font-bold text-pastel-green">8</div>
+                    <div class="text-xs text-txt-light font-bold">오늘 질문 수</div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-md p-4 text-center border border-[#FFE8CC]/30">
+                    <div class="text-2xl font-heading font-bold text-pastel-purple">312</div>
+                    <div class="text-xs text-txt-light font-bold">전체 좋아요 수</div>
+                </div>
+            </div>
+
+            <!-- Grade Stats -->
+            <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+                <h3 class="text-base font-heading font-bold mb-3">학년별 참여 현황</h3>
+                <div id="grade-stats"></div>
+            </div>
+
+            <!-- Top Questions -->
+            <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+                <h3 class="text-base font-heading font-bold mb-3">인기 질문 TOP 5</h3>
+                <div id="top-questions"></div>
+            </div>
+
+            <!-- Export -->
+            <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+                <h3 class="text-base font-heading font-bold mb-3">데이터 내보내기 (CSV)</h3>
+                <div class="flex gap-2 mb-3 flex-wrap">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-bold text-txt-light">시작</label>
+                        <input type="date" value="2026-03-01" class="px-3 py-2 border-2 border-[#FFE0B2] rounded-xl text-sm font-body bg-white focus:outline-none focus:border-pastel-orange transition">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-bold text-txt-light">종료</label>
+                        <input type="date" value="2026-03-09" class="px-3 py-2 border-2 border-[#FFE0B2] rounded-xl text-sm font-body bg-white focus:outline-none focus:border-pastel-orange transition">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="showToast('질문 데이터 CSV 다운로드 시작', 'success')" class="px-5 py-2.5 bg-pastel-green text-white rounded-xl text-sm font-bold hover:opacity-90 transition">질문 데이터</button>
+                    <button onclick="showToast('학생 통계 CSV 다운로드 시작', 'success')" class="px-5 py-2.5 bg-pastel-sky text-white rounded-xl text-sm font-bold hover:opacity-90 transition">학생 통계</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="nav-tab" id="bottom-nav" style="display:none">
+        <button onclick="showPage('page-main')" id="tab-main" class="active">
+            <span style="font-size:18px">&#9997;&#65039;</span>
+            <span>질문하기</span>
+        </button>
+        <button onclick="showPage('page-hall')" id="tab-hall">
+            <span style="font-size:18px">&#127942;</span>
+            <span>명예의 전당</span>
+        </button>
+        <button onclick="showPage('page-admin')" id="tab-admin">
+            <span style="font-size:18px">&#9881;&#65039;</span>
+            <span>관리자</span>
+        </button>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+<script>
+// ===================== SAMPLE DATA =====================
+const SAMPLE_QUESTIONS = {
+    0: [ // Today (3/9)
+        { id: 1, content: "비가 오기 전에 왜 하늘이 어두워지나요?", author: "5-1 이서준", grade: 5, like_count: 12, liked: false, time: "09:15" },
+        { id: 2, content: "거울은 어떻게 우리 모습을 비춰주나요?", author: "3-2 박지우", grade: 3, like_count: 8, liked: false, time: "09:32" },
+        { id: 3, content: "왜 밤에는 별이 보이는데 낮에는 안 보이나요?", author: "4-3 최민서", grade: 4, like_count: 15, liked: true, time: "10:05" },
+        { id: 4, content: "식물은 왜 햇빛 쪽으로 자라나요?", author: "6-1 정하윤", grade: 6, like_count: 7, liked: false, time: "10:28" },
+        { id: 5, content: "무지개는 왜 비 온 뒤에 생기나요?", author: "2-1 김도윤", grade: 2, like_count: 21, liked: true, time: "11:02" },
+        { id: 6, content: "얼음이 물에 뜨는 이유가 궁금해요!", author: "1-2 한소율", grade: 1, like_count: 5, liked: false, time: "11:45" },
+        { id: 7, content: "바람은 어디에서 오는 건가요?", author: "5-2 오지호", grade: 5, like_count: 9, liked: false, time: "12:30" },
+        { id: 8, content: "왜 우리는 꿈을 꾸나요?", author: "3-1 신유나", grade: 3, like_count: 18, liked: true, time: "13:15" },
+    ],
+    1: [ // Yesterday (3/8)
+        { id: 9, content: "지구는 왜 둥근 모양인가요?", author: "6-2 강도현", grade: 6, like_count: 14, liked: false, time: "08:30" },
+        { id: 10, content: "비행기는 어떻게 하늘에 떠 있을 수 있나요?", author: "4-1 윤서연", grade: 4, like_count: 22, liked: true, time: "09:00" },
+        { id: 11, content: "고양이는 왜 그르렁거리나요?", author: "2-2 임하준", grade: 2, like_count: 19, liked: false, time: "09:45" },
+        { id: 12, content: "달은 왜 모양이 변하나요?", author: "5-1 이서준", grade: 5, like_count: 11, liked: false, time: "10:10" },
+        { id: 13, content: "소금은 왜 바닷물에 녹아있나요?", author: "3-2 박지우", grade: 3, like_count: 6, liked: false, time: "10:30" },
+        { id: 14, content: "우리가 재채기를 하는 이유는 뭔가요?", author: "1-1 송지안", grade: 1, like_count: 8, liked: false, time: "11:00" },
+        { id: 15, content: "번개와 천둥은 왜 같이 오나요?", author: "4-3 최민서", grade: 4, like_count: 16, liked: true, time: "11:30" },
+        { id: 16, content: "우주에서는 소리가 안 들린다는데 정말인가요?", author: "6-1 정하윤", grade: 6, like_count: 25, liked: false, time: "12:00" },
+        { id: 17, content: "나비의 날개는 왜 알록달록한가요?", author: "2-1 김도윤", grade: 2, like_count: 13, liked: false, time: "12:30" },
+        { id: 18, content: "왜 여름은 덥고 겨울은 추운가요?", author: "5-2 오지호", grade: 5, like_count: 10, liked: false, time: "13:00" },
+        { id: 19, content: "피아노 소리는 어떻게 만들어지나요?", author: "3-1 신유나", grade: 3, like_count: 4, liked: false, time: "14:00" },
+        { id: 20, content: "물은 왜 높은 곳에서 낮은 곳으로 흐르나요?", author: "1-2 한소율", grade: 1, like_count: 7, liked: false, time: "14:30" },
+    ],
+};
+
+const HALL_OF_FAME = [
+    { rank: 1, grade: 5, class_num: 1, name: "이서준", question_count: 12, is_me: false },
+    { rank: 1, grade: 4, class_num: 3, name: "최민서", question_count: 12, is_me: false },
+    { rank: 2, grade: 6, class_num: 1, name: "정하윤", question_count: 10, is_me: false },
+    { rank: 2, grade: 3, class_num: 2, name: "박지우", question_count: 10, is_me: false },
+    { rank: 3, grade: 2, class_num: 1, name: "김도윤", question_count: 9, is_me: false },
+    { rank: 3, grade: 3, class_num: 1, name: "신유나", question_count: 9, is_me: false },
+    { rank: 4, grade: 5, class_num: 2, name: "오지호", question_count: 8, is_me: false },
+    { rank: 5, grade: 3, class_num: 2, name: "김하늘", question_count: 7, is_me: true },
+    { rank: 6, grade: 1, class_num: 2, name: "한소율", question_count: 6, is_me: false },
+    { rank: 7, grade: 2, class_num: 2, name: "임하준", question_count: 5, is_me: false },
+    { rank: 8, grade: 6, class_num: 2, name: "강도현", question_count: 5, is_me: false },
+    { rank: 9, grade: 1, class_num: 1, name: "송지안", question_count: 4, is_me: false },
+    { rank: 10, grade: 4, class_num: 1, name: "윤서연", question_count: 4, is_me: false },
+];
+
+const GRADE_STATS = [
+    { grade: 1, students: 5, questions: 18 },
+    { grade: 2, students: 6, questions: 24 },
+    { grade: 3, students: 9, questions: 35 },
+    { grade: 4, students: 7, questions: 28 },
+    { grade: 5, students: 11, questions: 32 },
+    { grade: 6, students: 9, questions: 19 },
+];
+
+// ===================== STATE =====================
+let currentDateOffset = 0;
+let currentGradeFilter = '';
+let currentSort = 'latest';
+let hasPostedToday = false;
+
+// ===================== NAVIGATION =====================
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+
+    const nav = document.getElementById('bottom-nav');
+    if (pageId === 'page-login') {
+        nav.style.display = 'none';
+    } else {
+        nav.style.display = 'flex';
+    }
+
+    // Update tab active states
+    document.querySelectorAll('.nav-tab button').forEach(b => b.classList.remove('active'));
+    if (pageId === 'page-main') document.getElementById('tab-main').classList.add('active');
+    if (pageId === 'page-hall') { document.getElementById('tab-hall').classList.add('active'); renderHallOfFame(); }
+    if (pageId === 'page-admin') document.getElementById('tab-admin').classList.add('active');
+
+    window.scrollTo(0, 0);
+}
+
+// ===================== LOGIN =====================
+document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('demo-name').value;
+    const grade = document.getElementById('demo-grade').value;
+    const cls = document.getElementById('demo-class').value;
+
+    if (!name || !grade || !cls) { showToast('모든 항목을 입력해주세요', 'error'); return; }
+
+    // Show PIN section on first click, then login
+    const pinSection = document.getElementById('pin-section');
+    if (pinSection.style.display === 'none') {
+        pinSection.style.display = 'block';
+        showToast('비밀번호를 입력해주세요', 'success');
+        return;
+    }
+
+    document.getElementById('user-info').textContent = `${grade}-${cls} ${name}`;
+    showPage('page-main');
+    loadQuestions();
+    showToast(`${name}님 환영합니다!`, 'success');
+});
+
+// ===================== QUESTIONS =====================
+function loadQuestions() {
+    const questions = SAMPLE_QUESTIONS[currentDateOffset] || [];
+    let filtered = currentGradeFilter ? questions.filter(q => q.grade === parseInt(currentGradeFilter)) : questions;
+
+    if (currentSort === 'likes') {
+        filtered = [...filtered].sort((a, b) => b.like_count - a.like_count);
+    }
+
+    document.getElementById('question-count').textContent = `${filtered.length}개`;
+
+    const listEl = document.getElementById('questions-list');
+    if (filtered.length === 0) {
+        listEl.innerHTML = `
+            <div class="text-center py-12 px-5">
+                <div class="text-5xl font-heading text-pastel-orange mb-3">?</div>
+                <p class="text-base font-bold text-txt-light">아직 질문이 없어요</p>
+                <p class="text-sm text-txt-lighter mt-1">첫 번째 질문의 주인공이 되어보세요!</p>
+            </div>`;
+        return;
+    }
+
+    listEl.innerHTML = filtered.map((q, i) => {
+        const isMine = q.author.includes('김하늘');
+        return `
+        <div class="bg-white rounded-2xl shadow-sm p-4 border border-[#FFE8CC]/20 animate-slideUp ${isMine ? 'border-l-4 border-l-pastel-orange bg-cream' : ''}" style="animation-delay: ${i * 0.05}s">
+            <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white grade-${q.grade} flex-shrink-0 mt-0.5">${q.grade}</div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-sm font-bold">${q.author}</span>
+                        <span class="text-xs text-txt-lighter">${q.time}</span>
+                        ${isMine ? '<span class="text-xs bg-pastel-orange/20 text-[#A04800] px-2 py-0.5 rounded-full font-bold">내 질문</span>' : ''}
+                    </div>
+                    <p class="text-base leading-relaxed mb-2">${q.content}</p>
+                    <button onclick="toggleLike(${q.id})" class="flex items-center gap-1.5 text-sm ${q.liked ? 'text-red-400 font-bold' : 'text-txt-lighter'} hover:text-red-400 transition bg-transparent border-none cursor-pointer p-0" id="like-btn-${q.id}">
+                        <span class="text-base ${q.liked ? '' : ''}">${q.liked ? '&#10084;&#65039;' : '&#9825;'}</span>
+                        <span id="like-count-${q.id}">${q.like_count}</span>
+                    </button>
+                </div>
+                ${isMine ? `
+                <div class="flex gap-1 flex-shrink-0">
+                    <button onclick="showToast('질문이 수정되었습니다', 'success')" class="text-xs px-2 py-1 rounded-lg bg-cream-dark text-txt-light font-bold hover:bg-[#FFE0B2] transition border-none cursor-pointer">수정</button>
+                    <button onclick="showToast('질문이 삭제되었습니다', 'success')" class="text-xs px-2 py-1 rounded-lg bg-pastel-coral/20 text-pastel-coral font-bold hover:bg-pastel-coral/30 transition border-none cursor-pointer">삭제</button>
+                </div>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function toggleLike(id) {
+    // Find in all date questions
+    for (const key in SAMPLE_QUESTIONS) {
+        const q = SAMPLE_QUESTIONS[key].find(q => q.id === id);
+        if (q) {
+            q.liked = !q.liked;
+            q.like_count += q.liked ? 1 : -1;
+            break;
+        }
+    }
+    loadQuestions();
+    const btn = document.getElementById(`like-btn-${id}`);
+    if (btn) btn.querySelector('span').classList.add('animate-heartPop');
+}
+
+function submitQuestion(e) {
+    e.preventDefault();
+    const content = document.getElementById('question-content').value.trim();
+    if (!content) { showToast('질문을 입력해주세요', 'error'); return; }
+
+    const newQ = {
+        id: 100 + Math.random() * 1000 | 0,
+        content: content,
+        author: "3-2 김하늘",
+        grade: 3,
+        like_count: 0,
+        liked: false,
+        time: new Date().toTimeString().slice(0, 5),
+    };
+    SAMPLE_QUESTIONS[0].unshift(newQ);
+
+    document.getElementById('question-content').value = '';
+    updateCharCount();
+
+    hasPostedToday = true;
+    document.getElementById('question-form-container').style.display = 'none';
+    document.getElementById('already-posted').style.display = 'block';
+
+    loadQuestions();
+    showToast('질문이 등록되었습니다!', 'success');
+}
+
+function updateCharCount() {
+    const len = document.getElementById('question-content').value.length;
+    document.getElementById('char-count').textContent = `${len}/200`;
+}
+
+function filterGrade(grade) {
+    currentGradeFilter = grade;
+    document.querySelectorAll('.grade-filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.grade === grade);
+        if (b.classList.contains('active')) {
+            b.style.borderColor = '#FFB87A';
+            b.style.color = '#D05A00';
+            b.style.background = '#FFF3E0';
+        } else {
+            b.style.borderColor = '#FFD0A0';
+            b.style.color = '#5C4E4E';
+            b.style.background = 'white';
+        }
+    });
+    loadQuestions();
+}
+
+function sortQuestions(sort) {
+    currentSort = sort;
+    document.querySelectorAll('.sort-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.sort === sort);
+        if (b.classList.contains('active')) {
+            b.style.borderColor = '#FFB87A';
+            b.style.color = '#D05A00';
+            b.style.background = '#FFF3E0';
+        } else {
+            b.style.borderColor = '#FFD0A0';
+            b.style.color = '#5C4E4E';
+            b.style.background = 'white';
+        }
+    });
+    loadQuestions();
+}
+
+// ===================== DATE NAVIGATION =====================
+const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+
+function updateDateDisplay() {
+    const today = new Date(2026, 2, 9); // March 9, 2026
+    const d = new Date(today);
+    d.setDate(d.getDate() - currentDateOffset);
+    const suffix = currentDateOffset === 0 ? ' - 오늘' : '';
+    document.getElementById('current-date-text').textContent = `${d.getMonth()+1}월 ${d.getDate()}일 (${DAY_NAMES[d.getDay()]})${suffix}`;
+    document.getElementById('next-date-btn').disabled = currentDateOffset === 0;
+
+    // Show/hide question form based on date
+    if (currentDateOffset === 0 && !hasPostedToday) {
+        document.getElementById('question-form-container').style.display = 'block';
+        document.getElementById('already-posted').style.display = 'none';
+    } else if (currentDateOffset === 0 && hasPostedToday) {
+        document.getElementById('question-form-container').style.display = 'none';
+        document.getElementById('already-posted').style.display = 'block';
+    } else {
+        document.getElementById('question-form-container').style.display = 'none';
+        document.getElementById('already-posted').style.display = 'none';
+    }
+}
+
+function changeDate(delta) {
+    currentDateOffset = Math.max(0, currentDateOffset - delta);
+    updateDateDisplay();
+    loadQuestions();
+}
+
+function goToDate(offset) {
+    currentDateOffset = offset;
+    updateDateDisplay();
+    loadQuestions();
+    document.getElementById('dates-list').style.display = 'none';
+}
+
+function toggleDates() {
+    const el = document.getElementById('dates-list');
+    el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+}
+
+// ===================== HALL OF FAME =====================
+function renderHallOfFame() {
+    const ranking = HALL_OF_FAME;
+    const grouped = {};
+    ranking.filter(r => r.rank <= 3).forEach(r => {
+        if (!grouped[r.rank]) grouped[r.rank] = [];
+        grouped[r.rank].push(r);
+    });
+
+    const icons = ['\u{1F3C6}', '\u{1F948}', '\u{1F949}'];
+    const badges = ['rank-badge-1', 'rank-badge-2', 'rank-badge-3'];
+    const labels = ['1등', '2등', '3등'];
+
+    let podiumHtml = '<div class="flex flex-col gap-3">';
+    [1, 2, 3].forEach(rank => {
+        if (!grouped[rank]) return;
+        const count = grouped[rank].length;
+        podiumHtml += `
+            <div class="${badges[rank-1]} rounded-2xl p-4 text-center">
+                <div class="text-2xl mb-1">${icons[rank-1]}</div>
+                <div class="text-lg font-heading font-bold ${rank === 1 ? 'text-[#5C3300]' : 'text-white'} mb-2">${labels[rank-1]} <span class="text-sm font-body ${rank === 1 ? 'text-[#5C3300]/70' : 'text-white/70'}">${count}명</span></div>
+                <div class="flex flex-wrap justify-center gap-2">
+                    ${grouped[rank].map(r => `
+                        <div class="${rank === 1 ? 'bg-[#5C3300]/30' : 'bg-white/30'} backdrop-blur-sm rounded-xl px-4 py-2 ${r.is_me ? 'ring-2 ring-white' : ''}">
+                            <div class="text-sm font-bold ${rank === 1 ? 'text-[#3A1F00]' : 'text-white'}">${r.grade}-${r.class_num} ${r.name}</div>
+                            <div class="text-xs ${rank === 1 ? 'text-[#5C3300]' : 'text-white/80'}">${r.question_count}개</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+    });
+    podiumHtml += '</div>';
+    document.getElementById('podium').innerHTML = podiumHtml;
+
+    const rest = ranking.filter(r => r.rank > 3);
+    document.getElementById('ranking-list').innerHTML = rest.map((r, i) => `
+        <div class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl shadow-sm mb-2 border border-[#FFE8CC]/20 animate-slideUp ${r.is_me ? 'border-l-4 border-l-pastel-orange bg-cream' : ''}" style="animation-delay: ${i * 0.03}s">
+            <span class="text-lg font-heading font-bold text-txt-light min-w-[35px] text-center">${r.rank}</span>
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white grade-${r.grade}">${r.grade}</div>
+            <div class="flex-1">
+                <span class="text-sm font-bold">${r.grade}-${r.class_num} ${r.name}</span>
+                ${r.is_me ? '<span class="text-xs bg-pastel-orange/20 text-[#A04800] px-2 py-0.5 rounded-full font-bold ml-2">나</span>' : ''}
+            </div>
+            <span class="text-sm font-bold text-pastel-orange">${r.question_count}개</span>
+        </div>
+    `).join('');
+}
+
+// ===================== ADMIN =====================
+function adminLogin(e) {
+    e.preventDefault();
+    document.getElementById('admin-login-screen').style.display = 'none';
+    document.getElementById('admin-dashboard').style.display = 'block';
+    renderAdminStats();
+    showToast('관리자로 로그인되었습니다', 'success');
+}
+
+function adminLogout() {
+    document.getElementById('admin-login-screen').style.display = 'flex';
+    document.getElementById('admin-dashboard').style.display = 'none';
+    showPage('page-login');
+}
+
+function enterStudentMode() {
+    showPage('page-main');
+    showToast('학생 페이지 관리 모드로 전환합니다', 'success');
+}
+
+function renderAdminStats() {
+    // Grade stats bar chart
+    const maxQ = Math.max(...GRADE_STATS.map(g => g.questions));
+    const gradeColors = ['#FF6B6B', '#FFD054', '#4CC9F0', '#FF8AE2', '#5B9CF0', '#9B8FFF'];
+
+    document.getElementById('grade-stats').innerHTML = GRADE_STATS.map((g, i) => `
+        <div class="flex items-center gap-3 mb-2">
+            <span class="text-sm font-bold w-16">${g.grade}학년</span>
+            <div class="flex-1 bg-cream rounded-full h-6 relative overflow-hidden">
+                <div class="grade-bar-fill h-full rounded-full flex items-center justify-end pr-2" style="width: ${(g.questions / maxQ * 100)}%; background: ${gradeColors[i]};">
+                    <span class="text-xs font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">${g.questions}개</span>
+                </div>
+            </div>
+            <span class="text-xs text-txt-lighter w-14 text-right">${g.students}명</span>
+        </div>
+    `).join('');
+
+    // Top questions
+    const allQuestions = [...(SAMPLE_QUESTIONS[0] || []), ...(SAMPLE_QUESTIONS[1] || [])];
+    const top5 = [...allQuestions].sort((a, b) => b.like_count - a.like_count).slice(0, 5);
+
+    document.getElementById('top-questions').innerHTML = top5.map((q, i) => `
+        <div class="flex items-start gap-3 py-3 ${i < 4 ? 'border-b border-cream-dark' : ''}">
+            <span class="text-lg font-heading font-bold ${i === 0 ? 'text-pastel-orange' : 'text-txt-lighter'}">${i + 1}</span>
+            <div class="flex-1">
+                <p class="text-sm mb-1">${q.content}</p>
+                <span class="text-xs text-txt-lighter">${q.author}</span>
+            </div>
+            <span class="text-sm font-bold text-pastel-coral flex items-center gap-1">&#10084;&#65039; ${q.like_count}</span>
+        </div>
+    `).join('');
+}
+
+// ===================== TOAST =====================
+function showToast(msg, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `toast ${type}`;
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ===================== INIT =====================
+// Style active filter buttons
+document.querySelectorAll('.grade-filter-btn.active, .sort-btn.active').forEach(b => {
+    b.style.borderColor = '#FFB87A';
+    b.style.color = '#D05A00';
+    b.style.background = '#FFF3E0';
+});
+</script>
+</body>
+</html>
