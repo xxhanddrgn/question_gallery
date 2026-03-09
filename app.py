@@ -5,7 +5,7 @@ import sqlite3
 import hashlib
 import secrets
 import random
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 from functools import wraps
 from flask import Flask, request, jsonify, session, send_from_directory, Response
 
@@ -28,6 +28,14 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'data', 'questions.db')
+
+# Korean Standard Time (UTC+9)
+KST = timezone(timedelta(hours=9))
+
+
+def kst_today():
+    """Get today's date in KST as ISO format string."""
+    return datetime.now(KST).date().isoformat()
 
 
 def get_db():
@@ -106,6 +114,18 @@ def init_db():
     if not admin:
         pw_hash = hashlib.sha256('admin123'.encode()).hexdigest()
         conn.execute("INSERT INTO admins (username, password_hash) VALUES (?, ?)", ('admin', pw_hash))
+
+    # Migrate existing question dates from UTC to KST (one-time)
+    migrated = conn.execute("SELECT value FROM settings WHERE key = 'dates_migrated_to_kst'").fetchone()
+    if not migrated:
+        conn.execute("""
+            UPDATE questions
+            SET created_date = DATE(created_at, '+9 hours')
+            WHERE created_at IS NOT NULL
+        """)
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES ('dates_migrated_to_kst', '1')"
+        )
 
     conn.commit()
     conn.close()
@@ -292,7 +312,7 @@ def me():
 @app.route('/api/questions', methods=['GET'])
 @login_required
 def get_questions():
-    target_date = request.args.get('date', date.today().isoformat())
+    target_date = request.args.get('date', kst_today())
     sort = request.args.get('sort', 'latest')
     grade_filter = request.args.get('grade', '')  # Feature 1: grade filter
 
@@ -350,7 +370,7 @@ def get_questions():
     if not is_admin:
         today_question = conn.execute(
             "SELECT id FROM questions WHERE student_id = ? AND created_date = ? AND is_deleted = 0",
-            (student_id, date.today().isoformat())
+            (student_id, kst_today())
         ).fetchone()
 
     conn.close()
@@ -378,7 +398,7 @@ def create_question():
         return jsonify({'error': '질문은 200자 이내로 작성해주세요'}), 400
 
     student_id = session['student_id']
-    today = date.today().isoformat()
+    today = kst_today()
 
     conn = get_db()
     existing = conn.execute(
@@ -582,7 +602,7 @@ def admin_exit_student_mode():
 @app.route('/api/admin/questions', methods=['GET'])
 @admin_required
 def admin_get_questions():
-    target_date = request.args.get('date', date.today().isoformat())
+    target_date = request.args.get('date', kst_today())
     conn = get_db()
 
     questions = conn.execute('''
@@ -674,7 +694,7 @@ def admin_stats():
     ).fetchone()['cnt']
     total_likes = conn.execute("SELECT COUNT(*) as cnt FROM likes").fetchone()['cnt']
 
-    today = date.today().isoformat()
+    today = kst_today()
     today_questions = conn.execute(
         "SELECT COUNT(*) as cnt FROM questions WHERE created_date = ? AND is_deleted = 0",
         (today,)
@@ -881,7 +901,7 @@ def admin_delete_student(student_id):
 @admin_required
 def reset_hall():
     conn = get_db()
-    today = date.today().isoformat()
+    today = kst_today()
     set_setting(conn, 'hall_reset_date', today)
     conn.commit()
     conn.close()
@@ -969,7 +989,7 @@ def hall_of_fame():
 @admin_required
 def export_questions():
     start_date = request.args.get('start', '2020-01-01')
-    end_date = request.args.get('end', date.today().isoformat())
+    end_date = request.args.get('end', kst_today())
 
     conn = get_db()
     questions = conn.execute('''
@@ -1012,7 +1032,7 @@ def export_questions():
 @admin_required
 def export_students():
     start_date = request.args.get('start', '2020-01-01')
-    end_date = request.args.get('end', date.today().isoformat())
+    end_date = request.args.get('end', kst_today())
 
     conn = get_db()
     students = conn.execute('''
