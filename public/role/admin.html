@@ -5,162 +5,232 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>1인 1역 - 관리자 설정</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap');
+
   :root {
-    --primary: #8b5cf6;
-    --primary-dark: #7c3aed;
-    --green: #22c55e;
-    --red: #ef4444;
-    --bg: #f5f3ff;
-    --card: #ffffff;
-    --border: #e2e8f0;
-    --text: #1e293b;
-    --text-light: #64748b;
-    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --primary: #8B5CF6;
+    --primary-dark: #7C3AED;
+    --primary-light: #A78BFA;
+    --primary-bg: #F3EEFF;
+    --green: #22C55E;
+    --green-dark: #16A34A;
+    --red: #F87171;
+    --red-dark: #EF4444;
+    --orange: #FB923C;
+    --bg: #F8F6FF;
+    --card: #FFFFFF;
+    --border: #E8E5F0;
+    --text: #2D2B42;
+    --text-light: #8E8BA3;
+    --shadow: 0 4px 16px rgba(139,92,246,0.08);
   }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Noto Sans KR', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
   }
+
+  /* Header */
   .header {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #6D28D9 100%);
     color: white;
     text-align: center;
-    padding: 20px 16px 16px;
+    padding: 16px 16px 14px;
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 2px 10px rgba(139,92,246,0.3);
+    overflow: hidden;
   }
-  .header h1 { font-size: 1.5rem; font-weight: 800; }
-  .header p { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    width: 70px;
+    height: 70px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+  }
+  .header h1 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .header p {
+    font-size: 0.8rem;
+    opacity: 0.85;
+    margin-top: 3px;
+  }
+
+  /* Content */
   .content {
     max-width: 700px;
     margin: 0 auto;
-    padding: 16px 12px 100px;
+    padding: 14px 12px 100px;
   }
+
+  /* Section */
   .section {
     background: white;
-    border-radius: 14px;
+    border-radius: 16px;
     box-shadow: var(--shadow);
     padding: 20px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+    transition: all 0.2s;
   }
   .section h2 {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     color: var(--primary-dark);
     margin-bottom: 14px;
     display: flex;
     align-items: center;
     gap: 8px;
+    font-weight: 800;
   }
+
+  /* Form */
   .form-group {
     margin-bottom: 14px;
   }
   .form-group label {
     display: block;
-    font-weight: 600;
-    font-size: 0.9rem;
+    font-weight: 700;
+    font-size: 0.88rem;
     margin-bottom: 6px;
     color: var(--text);
   }
-  .form-group input[type="text"] {
+  .form-group input[type="text"],
+  .form-group input[type="date"] {
     width: 100%;
-    padding: 10px 14px;
+    padding: 11px 14px;
     border: 2px solid var(--border);
-    border-radius: 10px;
-    font-size: 1rem;
-    transition: border-color 0.2s;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    background: #FAFAFE;
+    color: var(--text);
+    font-family: inherit;
   }
   .form-group input:focus {
     outline: none;
     border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
   }
+
+  /* Role Editor */
   .role-editor {
-    border: 2px solid #e9e5ff;
-    border-radius: 12px;
-    padding: 14px;
-    margin-bottom: 12px;
+    border: 2px solid var(--primary-bg);
+    border-radius: 14px;
+    padding: 16px 14px 12px;
+    margin-bottom: 10px;
     position: relative;
-    background: #faf8ff;
+    background: linear-gradient(135deg, #FDFCFF 0%, #F9F7FF 100%);
+    transition: all 0.2s;
   }
-  .role-editor .role-num {
+  .role-editor:hover {
+    border-color: var(--primary-light);
+    box-shadow: 0 2px 12px rgba(139,92,246,0.08);
+  }
+  .role-num {
     position: absolute;
     top: -10px;
     left: 14px;
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 2px 10px;
-    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 2px 12px;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
   }
-  .role-editor .role-field {
+  .role-field {
     display: flex;
-    gap: 10px;
-    margin-top: 6px;
+    gap: 8px;
+    margin-top: 4px;
     align-items: flex-start;
     flex-wrap: wrap;
   }
-  .role-editor .role-field .role-name-input {
+  .role-name-input {
     flex: 1;
-    min-width: 140px;
-    padding: 8px 12px;
+    min-width: 130px;
+    padding: 9px 12px;
     border: 2px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    background: white;
+    color: var(--text);
+    font-family: inherit;
+    transition: all 0.2s;
   }
-  .role-editor .role-field .students-input {
+  .students-input {
     flex: 2;
-    min-width: 200px;
-    padding: 8px 12px;
+    min-width: 180px;
+    padding: 9px 12px;
     border: 2px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.95rem;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    background: white;
+    color: var(--text);
+    font-family: inherit;
+    transition: all 0.2s;
   }
-  .role-editor .role-field .role-name-input:focus,
-  .role-editor .role-field .students-input:focus {
+  .role-name-input:focus,
+  .students-input:focus {
     outline: none;
     border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
   }
-  .role-editor .remove-role-btn {
+  .remove-role-btn {
     background: none;
-    border: none;
+    border: 2px solid transparent;
     color: var(--red);
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     cursor: pointer;
-    padding: 6px;
+    padding: 7px 8px;
     line-height: 1;
-    border-radius: 6px;
+    border-radius: 10px;
+    transition: all 0.2s;
   }
-  .role-editor .remove-role-btn:hover { background: #fef2f2; }
+  .remove-role-btn:hover {
+    background: #FFF0F0;
+    border-color: #FED7D7;
+  }
 
+  /* Days */
   .days-row {
     display: flex;
-    gap: 4px;
-    margin-top: 8px;
+    gap: 5px;
+    margin-top: 10px;
     flex-wrap: wrap;
     align-items: center;
   }
-  .days-row .days-label {
-    font-size: 0.8rem;
+  .days-label {
+    font-size: 0.78rem;
     color: var(--text-light);
-    font-weight: 600;
+    font-weight: 700;
     margin-right: 4px;
   }
   .day-chip {
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
     cursor: pointer;
     border: 2px solid var(--border);
     background: white;
     color: var(--text-light);
     transition: all 0.2s;
+  }
+  .day-chip:hover {
+    border-color: var(--primary-light);
   }
   .day-chip.active {
     background: var(--primary);
@@ -168,80 +238,115 @@
     color: white;
   }
 
+  /* Buttons */
   .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .btn {
-    padding: 10px 20px;
+    padding: 11px 22px;
     border: none;
-    border-radius: 10px;
-    font-size: 0.95rem;
+    border-radius: 12px;
+    font-size: 0.92rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
-  .btn:active { transform: scale(0.96); }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: scale(0.97); }
   .btn-primary { background: var(--primary); color: white; }
   .btn-primary:hover { background: var(--primary-dark); }
   .btn-success { background: var(--green); color: white; }
-  .btn-success:hover { background: #16a34a; }
+  .btn-success:hover { background: var(--green-dark); }
   .btn-danger { background: var(--red); color: white; }
-  .btn-danger:hover { background: #dc2626; }
-  .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
-  .btn-outline:hover { background: #f5f3ff; }
+  .btn-danger:hover { background: var(--red-dark); }
+  .btn-outline {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+  }
+  .btn-outline:hover { background: var(--primary-bg); }
 
+  /* Help Text */
+  .help-text {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 4px;
+    line-height: 1.6;
+    background: var(--primary-bg);
+    padding: 10px 14px;
+    border-radius: 10px;
+  }
+
+  /* Toast */
   .toast {
     position: fixed;
     bottom: 80px;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: #1e293b;
+    background: linear-gradient(135deg, #2D2B42, #1E1B32);
     color: white;
     padding: 12px 24px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: transform 0.3s ease;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     z-index: 200;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  .help-text {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    margin-top: 4px;
-  }
-
+  /* Bottom Nav */
   .nav-bottom {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     background: white;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
     display: flex;
     z-index: 100;
+    border-top: 1px solid #EDE9FF;
   }
   .nav-bottom a {
     flex: 1;
     text-align: center;
-    padding: 10px 0 8px;
+    padding: 8px 0 6px;
     text-decoration: none;
     color: var(--text-light);
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.7rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    position: relative;
   }
-  .nav-bottom a.active { color: var(--primary-dark); }
-  .nav-bottom a .nav-icon { display: block; font-size: 1.3rem; margin-bottom: 2px; }
+  .nav-bottom a.active { color: var(--primary); }
+  .nav-bottom a.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 0 0 4px 4px;
+  }
+  .nav-bottom a .nav-icon { display: block; font-size: 1.2rem; margin-bottom: 2px; }
 </style>
 </head>
 <body>
 <div class="header">
-  <h1>관리자 설정</h1>
+  <h1>⚙️ 관리자 설정</h1>
   <p>역할과 학생 이름을 편집하세요</p>
 </div>
 
 <div class="content">
   <div class="section">
-    <h2>기본 정보</h2>
+    <h2>🏫 기본 정보</h2>
     <div class="form-group">
       <label>반 이름</label>
       <input type="text" id="classNameInput" placeholder="예: 6학년 1반">
@@ -253,31 +358,31 @@
   </div>
 
   <div class="section">
-    <h2>1인 1역 편집</h2>
-    <p class="help-text" style="margin-bottom: 14px;">역할 이름과 담당 학생을 입력하세요. 학생이 여러 명이면 쉼표(,)로 구분합니다.<br>요일 버튼을 클릭해서 해당 역할이 나타나는 요일을 선택하세요.</p>
+    <h2>📝 1인 1역 편집</h2>
+    <div class="help-text" style="margin-bottom: 14px;">💡 역할 이름과 담당 학생을 입력하세요. 학생이 여러 명이면 쉼표(,)로 구분합니다.<br>요일 버튼을 클릭해서 해당 역할이 나타나는 요일을 선택하세요.</div>
     <div id="rolesContainer"></div>
     <div class="btn-row" style="margin-top: 12px;">
-      <button class="btn btn-outline" onclick="addRole()">+ 역할 추가</button>
+      <button class="btn btn-outline" onclick="addRole()">➕ 역할 추가</button>
     </div>
   </div>
 
   <div class="section">
-    <h2>저장</h2>
+    <h2>💾 저장</h2>
     <div class="btn-row">
-      <button class="btn btn-success" onclick="saveAll()">저장하기</button>
-      <button class="btn btn-primary" onclick="loadAll()">되돌리기</button>
+      <button class="btn btn-success" onclick="saveAll()">✅ 저장하기</button>
+      <button class="btn btn-primary" onclick="loadAll()">↩️ 되돌리기</button>
     </div>
   </div>
 
   <div class="section">
-    <h2>데이터 관리</h2>
-    <p class="help-text" style="margin-bottom: 12px;">특정 날짜의 체크 데이터를 초기화할 수 있습니다.</p>
+    <h2>🗄️ 데이터 관리</h2>
+    <div class="help-text" style="margin-bottom: 12px;">⚠️ 특정 날짜의 체크 데이터를 초기화할 수 있습니다. 이 작업은 되돌릴 수 없어요.</div>
     <div class="form-group">
       <label>초기화할 날짜</label>
-      <input type="date" id="resetDateInput" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:1rem;">
+      <input type="date" id="resetDateInput">
     </div>
     <div class="btn-row">
-      <button class="btn btn-danger" onclick="resetDate()">해당 날짜 초기화</button>
+      <button class="btn btn-danger" onclick="resetDate()">🗑️ 해당 날짜 초기화</button>
     </div>
   </div>
 </div>
@@ -286,13 +391,13 @@
 
 <nav class="nav-bottom">
   <a href="/">
-    <span class="nav-icon">&#10003;</span>체크하기
+    <span class="nav-icon">✅</span>체크하기
   </a>
   <a href="/role/teacher.html">
-    <span class="nav-icon">&#128269;</span>점검하기
+    <span class="nav-icon">🔍</span>점검하기
   </a>
   <a href="/role/admin.html" class="active">
-    <span class="nav-icon">&#9881;</span>관리
+    <span class="nav-icon">⚙️</span>관리
   </a>
 </nav>
 
@@ -341,7 +446,7 @@ function renderRoles() {
     daysHtml += '</div>';
 
     div.innerHTML = `
-      <span class="role-num">${idx + 1}</span>
+      <span class="role-num">${idx + 1}번 역할</span>
       <div class="role-field">
         <input type="text" class="role-name-input" value="${role.role}" placeholder="역할 이름" data-idx="${idx}">
         <input type="text" class="students-input" value="${role.students.join(', ')}" placeholder="학생 이름 (쉼표 구분)" data-idx="${idx}">
@@ -406,9 +511,9 @@ async function saveAll() {
   const className = document.getElementById('classNameInput').value.trim();
   const motto = document.getElementById('mottoInput').value.trim();
 
-  if (!className) { showToast('반 이름을 입력하세요'); return; }
+  if (!className) { showToast('⚠️ 반 이름을 입력하세요'); return; }
   const emptyRole = roles.find(r => !r.role);
-  if (emptyRole) { showToast('빈 역할 이름이 있습니다'); return; }
+  if (emptyRole) { showToast('⚠️ 빈 역할 이름이 있습니다'); return; }
 
   await fetch('/api/roles', {
     method: 'POST',
@@ -417,15 +522,15 @@ async function saveAll() {
   });
 
   rolesData = roles;
-  showToast('저장되었습니다!');
+  showToast('✅ 저장되었습니다!');
 }
 
 async function resetDate() {
   const date = document.getElementById('resetDateInput').value;
-  if (!date) { showToast('날짜를 선택하세요'); return; }
-  if (!confirm(`${date}의 모든 체크 데이터를 초기화하시겠습니까?`)) return;
+  if (!date) { showToast('⚠️ 날짜를 선택하세요'); return; }
+  if (!confirm(`${date}의 모든 체크 데이터를 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
   await fetch(`/api/checks/${date}`, { method: 'DELETE' });
-  showToast(`${date} 데이터가 초기화되었습니다`);
+  showToast(`🗑️ ${date} 데이터가 초기화되었습니다`);
 }
 
 document.getElementById('resetDateInput').value = getToday();

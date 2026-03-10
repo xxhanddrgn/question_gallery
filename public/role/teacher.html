@@ -5,182 +5,233 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>1인 1역 - 교사 점검</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap');
+
   :root {
-    --primary: #3b82f6;
-    --primary-dark: #2563eb;
-    --green: #22c55e;
-    --green-light: #dcfce7;
-    --yellow: #f59e0b;
-    --yellow-light: #fef3c7;
-    --red: #ef4444;
-    --bg: #f0f5ff;
-    --card: #ffffff;
-    --border: #e2e8f0;
-    --text: #1e293b;
-    --text-light: #64748b;
-    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --primary: #3B82F6;
+    --primary-dark: #2563EB;
+    --primary-light: #93C5FD;
+    --primary-bg: #EFF6FF;
+    --green: #4ADE80;
+    --green-dark: #22C55E;
+    --green-light: #DCFCE7;
+    --orange: #FB923C;
+    --red: #F87171;
+    --bg: #F0F5FF;
+    --card: #FFFFFF;
+    --border: #E2E8F0;
+    --text: #1E293B;
+    --text-light: #64748B;
+    --shadow: 0 4px 16px rgba(59,130,246,0.08);
   }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Noto Sans KR', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
   }
+
+  /* Header */
   .header {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%);
     color: white;
     text-align: center;
-    padding: 20px 16px 16px;
+    padding: 16px 16px 14px;
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 2px 10px rgba(59,130,246,0.3);
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    width: 70px;
+    height: 70px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
   }
   .header .class-name {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     opacity: 0.9;
+    font-weight: 600;
   }
   .header h1 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 800;
-  }
-  .toolbar {
-    background: white;
-    padding: 12px 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    box-shadow: var(--shadow);
+    gap: 6px;
+  }
+
+  /* Toolbar */
+  .toolbar {
+    background: white;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     flex-wrap: wrap;
     position: sticky;
-    top: 72px;
+    top: 64px;
     z-index: 99;
   }
   .toolbar input[type="date"] {
-    font-size: 1rem;
-    padding: 6px 12px;
-    border: 2px solid var(--primary);
-    border-radius: 8px;
+    font-size: 0.95rem;
+    padding: 7px 12px;
+    border: 2px solid var(--primary-bg);
+    border-radius: 10px;
     font-weight: 600;
+    color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .toolbar input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary);
   }
   .toolbar button {
-    padding: 6px 14px;
+    padding: 7px 14px;
     border: none;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
     cursor: pointer;
     color: white;
+    transition: all 0.2s;
   }
+  .toolbar button:hover { transform: translateY(-1px); }
+  .toolbar button:active { transform: scale(0.95); }
   .btn-today { background: var(--primary); }
-  .btn-approve-all { background: var(--green); }
-  .btn-refresh { background: var(--yellow); color: #1f2937; }
+  .btn-approve-all { background: var(--green-dark); }
+  .btn-refresh { background: var(--orange); }
 
+  /* Stats */
   .stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
-    padding: 16px;
+    padding: 14px 16px;
     max-width: 800px;
     margin: 0 auto;
   }
   .stat-card {
     background: white;
-    border-radius: 12px;
-    padding: 14px;
+    border-radius: 14px;
+    padding: 14px 10px;
     text-align: center;
     box-shadow: var(--shadow);
+    transition: transform 0.2s;
   }
-  .stat-card .stat-num {
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-emoji {
+    font-size: 1.4rem;
+    margin-bottom: 4px;
+  }
+  .stat-num {
     font-size: 1.8rem;
     font-weight: 800;
+    line-height: 1.2;
   }
-  .stat-card .stat-label {
-    font-size: 0.78rem;
+  .stat-label {
+    font-size: 0.75rem;
     color: var(--text-light);
+    font-weight: 600;
     margin-top: 2px;
   }
   .stat-total .stat-num { color: var(--primary); }
-  .stat-done .stat-num { color: var(--green); }
+  .stat-done .stat-num { color: var(--green-dark); }
   .stat-pending .stat-num { color: var(--red); }
 
-  .check-table-wrapper {
-    padding: 0 12px 100px;
+  /* Check Cards (mobile-friendly alternative to table) */
+  .check-list {
+    padding: 0 12px 90px;
     max-width: 900px;
     margin: 0 auto;
   }
-  .check-table {
-    width: 100%;
-    border-collapse: collapse;
+  .check-card {
     background: white;
-    border-radius: 12px;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    margin-bottom: 8px;
     overflow: hidden;
-    box-shadow: var(--shadow);
-    margin-top: 12px;
+    transition: all 0.2s;
+    border-left: 4px solid transparent;
   }
-  .check-table thead th {
-    background: var(--primary);
-    color: white;
-    padding: 12px 10px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-align: center;
-    position: sticky;
-    top: 130px;
-    z-index: 10;
+  .check-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   }
-  .check-table tbody tr {
-    transition: background 0.2s;
+  .check-card.row-approved {
+    border-left-color: var(--primary);
+    background: #FAFCFF;
   }
-  .check-table tbody tr:hover {
-    background: #f8fafc;
+  .check-card.row-checked {
+    border-left-color: var(--green-dark);
+    background: #FAFFFA;
   }
-  .check-table tbody tr.row-approved {
-    background: #eff6ff;
+  .check-card.row-unchecked {
+    border-left-color: #E2E8F0;
   }
-  .check-table tbody tr.row-checked {
-    background: var(--green-light);
+  .check-card-inner {
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
-  .check-table tbody tr.row-unchecked {
-    background: #fff;
+  .check-status-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
   }
-  .check-table tbody td {
-    padding: 10px;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.9rem;
-    text-align: center;
-    vertical-align: middle;
-  }
-  .check-table tbody td:nth-child(1) {
-    font-weight: 700;
-    color: var(--primary-dark);
-    text-align: left;
-    padding-left: 16px;
-  }
-  .check-table tbody td:nth-child(2) {
-    font-weight: 600;
-  }
+  .check-card.row-approved .check-status-icon { background: var(--primary-bg); }
+  .check-card.row-checked .check-status-icon { background: var(--green-light); }
+  .check-card.row-unchecked .check-status-icon { background: #F1F5F9; }
 
-  .status-icon {
-    font-size: 1.2rem;
+  .check-info { flex: 1; min-width: 0; }
+  .check-role-name {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--primary-dark);
+  }
+  .check-student-name {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+  .check-time-info {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    margin-top: 2px;
   }
   .approve-btn {
-    padding: 5px 12px;
-    border: 2px solid var(--green);
+    padding: 8px 16px;
+    border: 2px solid var(--green-dark);
     background: white;
-    color: var(--green);
-    border-radius: 8px;
+    color: var(--green-dark);
+    border-radius: 10px;
     font-weight: 700;
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.2s;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   .approve-btn:hover {
-    background: var(--green);
+    background: var(--green-dark);
     color: white;
+    transform: scale(1.03);
   }
+  .approve-btn:active { transform: scale(0.95); }
   .approve-btn.approved {
     background: var(--primary);
     border-color: var(--primary);
@@ -190,99 +241,108 @@
     background: var(--red);
     border-color: var(--red);
   }
+  .approve-placeholder {
+    color: #D1D5DB;
+    font-size: 0.8rem;
+    padding: 8px 12px;
+    flex-shrink: 0;
+  }
 
+  /* Empty */
+  .empty-msg {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-light);
+    font-weight: 600;
+  }
+  .empty-msg .big-emoji {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  /* Bottom Nav */
   .nav-bottom {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     background: white;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
     display: flex;
     z-index: 100;
+    border-top: 1px solid #E8EFF8;
   }
   .nav-bottom a {
     flex: 1;
     text-align: center;
-    padding: 10px 0 8px;
+    padding: 8px 0 6px;
     text-decoration: none;
     color: var(--text-light);
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.7rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    position: relative;
   }
-  .nav-bottom a.active { color: var(--primary-dark); }
-  .nav-bottom a .nav-icon { display: block; font-size: 1.3rem; margin-bottom: 2px; }
-
-  .empty-msg {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-light);
+  .nav-bottom a.active { color: var(--primary); }
+  .nav-bottom a.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 0 0 4px 4px;
   }
-
-  @media (max-width: 600px) {
-    .stats { grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px; }
-    .stat-card { padding: 10px; }
-    .stat-card .stat-num { font-size: 1.4rem; }
-    .check-table tbody td { padding: 8px 6px; font-size: 0.82rem; }
-    .hide-mobile { display: none; }
-  }
+  .nav-bottom a .nav-icon { display: block; font-size: 1.2rem; margin-bottom: 2px; }
 </style>
 </head>
 <body>
 <div class="header">
   <div class="class-name" id="className">6학년 1반</div>
-  <h1>교사 점검 페이지</h1>
+  <h1>📋 교사 점검 페이지</h1>
 </div>
 
 <div class="toolbar">
   <input type="date" id="dateInput">
   <button class="btn-today" onclick="goToday()">오늘</button>
-  <button class="btn-approve-all" onclick="approveAllChecked()">전체 확인</button>
-  <button class="btn-refresh" onclick="loadChecks()">새로고침</button>
+  <button class="btn-approve-all" onclick="approveAllChecked()">✓ 전체 확인</button>
+  <button class="btn-refresh" onclick="loadChecks()">↻ 새로고침</button>
 </div>
 
 <div class="stats">
   <div class="stat-card stat-total">
+    <div class="stat-emoji">👥</div>
     <div class="stat-num" id="statTotal">0</div>
     <div class="stat-label">전체</div>
   </div>
   <div class="stat-card stat-done">
+    <div class="stat-emoji">✅</div>
     <div class="stat-num" id="statDone">0</div>
     <div class="stat-label">체크 완료</div>
   </div>
   <div class="stat-card stat-pending">
+    <div class="stat-emoji">⏳</div>
     <div class="stat-num" id="statPending">0</div>
     <div class="stat-label">미완료</div>
   </div>
 </div>
 
-<div class="check-table-wrapper">
-  <table class="check-table">
-    <thead>
-      <tr>
-        <th>역할</th>
-        <th>이름</th>
-        <th>상태</th>
-        <th>체크 시간</th>
-        <th class="hide-mobile">확인 시간</th>
-        <th>교사 확인</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody">
-      <tr><td colspan="6" class="empty-msg">불러오는 중...</td></tr>
-    </tbody>
-  </table>
+<div class="check-list" id="checkList">
+  <div class="empty-msg"><span class="big-emoji">📚</span>불러오는 중...</div>
 </div>
 
 <nav class="nav-bottom">
   <a href="/">
-    <span class="nav-icon">&#10003;</span>체크하기
+    <span class="nav-icon">✅</span>체크하기
   </a>
   <a href="/role/teacher.html" class="active">
-    <span class="nav-icon">&#128269;</span>점검하기
+    <span class="nav-icon">🔍</span>점검하기
   </a>
   <a href="/role/admin.html">
-    <span class="nav-icon">&#9881;</span>관리
+    <span class="nav-icon">⚙️</span>관리
   </a>
 </nav>
 
@@ -316,8 +376,8 @@ async function loadChecks() {
 }
 
 function render() {
-  const tbody = document.getElementById('tableBody');
-  tbody.innerHTML = '';
+  const container = document.getElementById('checkList');
+  container.innerHTML = '';
 
   let total = 0, done = 0;
 
@@ -330,10 +390,11 @@ function render() {
       const isApproved = check && check.approved;
       if (isChecked) done++;
 
-      const tr = document.createElement('tr');
-      if (isApproved) tr.className = 'row-approved';
-      else if (isChecked) tr.className = 'row-checked';
-      else tr.className = 'row-unchecked';
+      const card = document.createElement('div');
+      card.className = 'check-card';
+      if (isApproved) card.classList.add('row-approved');
+      else if (isChecked) card.classList.add('row-checked');
+      else card.classList.add('row-unchecked');
 
       let statusIcon = '⬜';
       if (isApproved) statusIcon = '🔵';
@@ -343,22 +404,33 @@ function render() {
       if (isChecked && !isApproved) {
         approveBtn = `<button class="approve-btn" onclick="approve(${role.id},'${student}',true)">확인</button>`;
       } else if (isApproved) {
-        approveBtn = `<button class="approve-btn approved" onclick="approve(${role.id},'${student}',false)">확인됨</button>`;
+        approveBtn = `<button class="approve-btn approved" onclick="approve(${role.id},'${student}',false)">확인됨 ✓</button>`;
       } else {
-        approveBtn = '<span style="color:#d1d5db">-</span>';
+        approveBtn = '<span class="approve-placeholder">—</span>';
       }
 
-      tr.innerHTML = `
-        <td>${role.role}</td>
-        <td>${student}</td>
-        <td><span class="status-icon">${statusIcon}</span></td>
-        <td>${isChecked && check.time ? check.time : '-'}</td>
-        <td class="hide-mobile">${isApproved && check.approveTime ? check.approveTime : '-'}</td>
-        <td>${approveBtn}</td>
+      let timeInfo = '';
+      if (isChecked && check.time) timeInfo += `⏰ 체크: ${check.time}`;
+      if (isApproved && check.approveTime) timeInfo += ` · 확인: ${check.approveTime}`;
+
+      card.innerHTML = `
+        <div class="check-card-inner">
+          <div class="check-status-icon">${statusIcon}</div>
+          <div class="check-info">
+            <div class="check-role-name">${role.role}</div>
+            <div class="check-student-name">${student}</div>
+            <div class="check-time-info">${timeInfo || '아직 체크하지 않았어요'}</div>
+          </div>
+          ${approveBtn}
+        </div>
       `;
-      tbody.appendChild(tr);
+      container.appendChild(card);
     });
   });
+
+  if (total === 0) {
+    container.innerHTML = '<div class="empty-msg"><span class="big-emoji">📭</span>표시할 데이터가 없습니다</div>';
+  }
 
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statDone').textContent = done;

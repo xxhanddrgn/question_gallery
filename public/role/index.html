@@ -5,222 +5,374 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>1인 1역 체크리스트</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap');
+
   :root {
-    --primary: #f59e0b;
-    --primary-dark: #d97706;
-    --green: #22c55e;
-    --green-light: #dcfce7;
-    --red: #ef4444;
-    --bg: #fefce8;
-    --card: #ffffff;
-    --border: #e5e7eb;
-    --text: #1f2937;
-    --text-light: #6b7280;
-    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --primary: #6C63FF;
+    --primary-light: #8B85FF;
+    --primary-bg: #EDE9FF;
+    --green: #4ADE80;
+    --green-dark: #22C55E;
+    --green-light: #DCFCE7;
+    --orange: #FB923C;
+    --orange-light: #FFF1E6;
+    --pink: #F472B6;
+    --pink-light: #FFF0F6;
+    --sky: #38BDF8;
+    --sky-light: #E0F2FE;
+    --bg: #F8F7FF;
+    --card: #FFFFFF;
+    --border: #E8E5F0;
+    --text: #2D2B42;
+    --text-light: #8E8BA3;
+    --shadow: 0 4px 16px rgba(108,99,255,0.08);
+    --shadow-hover: 0 8px 24px rgba(108,99,255,0.15);
   }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
   html, body {
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Noto Sans KR', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg);
     color: var(--text);
     height: 100vh;
     overflow: hidden;
   }
+
   .container {
     display: flex;
     flex-direction: column;
     height: 100vh;
   }
+
+  /* Header */
   .header {
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    background: linear-gradient(135deg, #6C63FF 0%, #8B85FF 50%, #A78BFA 100%);
     color: white;
     text-align: center;
-    padding: 10px 16px;
-    box-shadow: 0 2px 10px rgba(245,158,11,0.3);
+    padding: 14px 16px 12px;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: 20px;
+    width: 60px;
+    height: 60px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
   }
   .header .class-name {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     opacity: 0.9;
+    font-weight: 600;
+    letter-spacing: 0.5px;
   }
   .header h1 {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     font-weight: 800;
-  }
-  .date-bar {
-    background: white;
-    padding: 8px 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 14px;
-    box-shadow: var(--shadow);
+    gap: 6px;
+  }
+  .header .motto {
+    font-size: 0.72rem;
+    opacity: 0.8;
+    margin-top: 2px;
+  }
+
+  /* Date Bar */
+  .date-bar {
+    background: white;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     flex-shrink: 0;
   }
-  .date-bar .arrow-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid var(--primary);
+  .arrow-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 2px solid var(--primary-bg);
     background: white;
-    color: var(--primary-dark);
-    font-size: 1.2rem;
+    color: var(--primary);
+    font-size: 1.1rem;
     font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     flex-shrink: 0;
   }
-  .date-bar .arrow-btn:hover {
+  .arrow-btn:hover {
     background: var(--primary);
     color: white;
+    border-color: var(--primary);
+    transform: scale(1.05);
   }
-  .date-bar .date-display {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--text);
-    min-width: 180px;
+  .arrow-btn:active {
+    transform: scale(0.95);
+  }
+  .date-display {
+    min-width: 160px;
     text-align: center;
   }
-  .date-bar .date-display .day-name {
-    font-size: 0.8rem;
+  .date-display #dateText {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .date-display .day-name {
+    font-size: 0.78rem;
     color: var(--text-light);
     font-weight: 500;
   }
-  .date-bar .today-btn {
-    padding: 5px 12px;
+  .today-btn {
+    padding: 7px 16px;
     background: var(--primary);
     color: white;
     border: none;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
     cursor: pointer;
+    transition: all 0.2s;
   }
+  .today-btn:hover { background: var(--primary-light); transform: translateY(-1px); }
+  .today-btn:active { transform: scale(0.95); }
+
+  /* Progress */
   .progress-section {
-    padding: 6px 16px;
+    padding: 8px 16px 4px;
     flex-shrink: 0;
   }
+  .progress-wrapper {
+    background: white;
+    border-radius: 14px;
+    padding: 10px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .progress-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .progress-emoji {
+    font-size: 1rem;
+  }
   .progress-bar-bg {
-    background: #e5e7eb;
+    background: #F0EEFF;
     border-radius: 999px;
-    height: 10px;
+    height: 12px;
     overflow: hidden;
   }
   .progress-bar-fill {
     background: linear-gradient(90deg, var(--primary), var(--green));
     height: 100%;
     border-radius: 999px;
-    transition: width 0.5s ease;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
   .progress-text {
     text-align: center;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     color: var(--text-light);
-    margin-top: 3px;
+    margin-top: 4px;
+    font-weight: 600;
   }
-  .progress-text strong { color: var(--primary-dark); }
+  .progress-text strong { color: var(--primary); }
 
+  /* Role List */
   .role-list {
     flex: 1;
     overflow-y: auto;
-    padding: 6px 10px 50px;
+    padding: 8px 12px 70px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 8px;
+    gap: 10px;
     align-content: start;
   }
+  .role-list::-webkit-scrollbar { width: 4px; }
+  .role-list::-webkit-scrollbar-thumb { background: #D5D0F0; border-radius: 4px; }
+
+  /* Role Card */
   .role-card {
     background: var(--card);
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: var(--shadow);
     overflow: hidden;
-    border-left: 4px solid var(--primary);
-    transition: border-color 0.3s;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+  }
+  .role-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
   }
   .role-card.all-done {
-    border-left-color: var(--green);
+    border-color: var(--green);
+    background: linear-gradient(135deg, #FAFFFA 0%, #F0FFF4 100%);
   }
-  .role-card .role-header {
-    padding: 8px 12px 4px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: var(--primary-dark);
+  .role-header {
+    padding: 10px 14px 6px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
-  .role-card .role-header .role-icon {
-    font-size: 1rem;
+  .role-icon-bubble {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
   }
+  .role-name {
+    font-weight: 800;
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+  .role-done-badge {
+    margin-left: auto;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 8px;
+    background: var(--green-light);
+    color: #166534;
+  }
+
+  /* Student Row */
   .student-row {
     display: flex;
     align-items: center;
-    padding: 6px 12px;
+    padding: 8px 14px;
     gap: 10px;
-    transition: background 0.2s;
+    transition: all 0.3s ease;
   }
   .student-row:not(:last-child) {
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid #F5F3FF;
   }
   .student-row.checked {
-    background: var(--green-light);
+    background: linear-gradient(90deg, #F0FFF4, #FAFFFA);
   }
-  .student-row .check-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 2.5px solid #d1d5db;
+
+  /* Check Button */
+  .check-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 2.5px solid #E0DDF0;
     background: white;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     flex-shrink: 0;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    color: #D1D0E0;
   }
-  .student-row .check-btn:active {
+  .check-btn:hover {
+    border-color: var(--primary-light);
+    background: var(--primary-bg);
+    transform: scale(1.05);
+  }
+  .check-btn:active {
     transform: scale(0.9);
   }
   .student-row.checked .check-btn {
     border-color: var(--green);
     background: var(--green);
     color: white;
+    box-shadow: 0 3px 10px rgba(74,222,128,0.3);
   }
-  .student-row .student-info {
-    flex: 1;
-  }
-  .student-row .student-name {
+
+  /* Student Info */
+  .student-info { flex: 1; }
+  .student-name {
     font-weight: 700;
     font-size: 0.95rem;
+    color: var(--text);
   }
-  .student-row .check-time {
-    font-size: 0.7rem;
+  .check-time {
+    font-size: 0.72rem;
     color: var(--text-light);
+    margin-top: 1px;
   }
-  .student-row .status-badge {
-    font-size: 0.68rem;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-weight: 600;
-    flex-shrink: 0;
-  }
-  .status-badge.pending { background: #fef3c7; color: #92400e; }
-  .status-badge.done { background: #dcfce7; color: #166534; }
-  .status-badge.approved { background: #dbeafe; color: #1e40af; }
 
+  /* Status Badge */
+  .status-badge {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+  }
+  .status-badge.pending {
+    background: #FFF1E6;
+    color: #C2410C;
+  }
+  .status-badge.done {
+    background: #DCFCE7;
+    color: #166534;
+  }
+  .status-badge.approved {
+    background: #E0F2FE;
+    color: #0369A1;
+  }
+
+  /* Bottom Nav */
   .nav-bottom {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     background: white;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
     display: flex;
     z-index: 100;
+    border-top: 1px solid #F0EEFF;
   }
   .nav-bottom a {
     flex: 1;
@@ -229,25 +381,83 @@
     text-decoration: none;
     color: var(--text-light);
     font-size: 0.7rem;
-    font-weight: 600;
-    transition: color 0.2s;
+    font-weight: 700;
+    transition: all 0.2s;
+    position: relative;
   }
-  .nav-bottom a.active { color: var(--primary-dark); }
-  .nav-bottom a .nav-icon { display: block; font-size: 1.1rem; margin-bottom: 1px; }
+  .nav-bottom a.active {
+    color: var(--primary);
+  }
+  .nav-bottom a.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 0 0 4px 4px;
+  }
+  .nav-bottom a .nav-icon {
+    display: block;
+    font-size: 1.2rem;
+    margin-bottom: 2px;
+  }
 
+  /* Weekend & Empty */
   .weekend-msg {
     text-align: center;
-    padding: 40px;
+    padding: 50px 20px;
     color: var(--text-light);
-    font-size: 1.1rem;
+    font-size: 1rem;
     grid-column: 1 / -1;
+    font-weight: 600;
+  }
+  .weekend-msg .big-emoji {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 12px;
   }
 
+  /* Celebration overlay */
+  .celebration {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 200;
+  }
+  .confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    animation: confetti-fall 1.5s ease-out forwards;
+    opacity: 0;
+  }
+  @keyframes confetti-fall {
+    0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+  }
+
+  /* Card color variations */
+  .role-card:nth-child(4n+1) .role-icon-bubble { background: var(--primary-bg); }
+  .role-card:nth-child(4n+2) .role-icon-bubble { background: var(--orange-light); }
+  .role-card:nth-child(4n+3) .role-icon-bubble { background: var(--pink-light); }
+  .role-card:nth-child(4n+4) .role-icon-bubble { background: var(--sky-light); }
+
+  /* Responsive */
   @media (min-width: 1200px) {
-    .role-list { grid-template-columns: repeat(3, 1fr); padding: 8px 20px 50px; }
+    .role-list { grid-template-columns: repeat(3, 1fr); padding: 10px 24px 70px; }
   }
   @media (min-width: 1600px) {
     .role-list { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 380px) {
+    .role-list { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -255,40 +465,49 @@
 <div class="container">
   <div class="header">
     <div class="class-name" id="className">6학년 1반</div>
-    <h1>1인 1역 체크리스트</h1>
+    <h1>📝 우리반 1인 1역</h1>
+    <div class="motto" id="mottoText"></div>
   </div>
 
   <div class="date-bar">
-    <button class="arrow-btn" onclick="changeDate(-1)">&lt;</button>
+    <button class="arrow-btn" onclick="changeDate(-1)">‹</button>
     <div class="date-display">
       <div id="dateText"></div>
       <div class="day-name" id="dayText"></div>
     </div>
-    <button class="arrow-btn" onclick="changeDate(1)">&gt;</button>
+    <button class="arrow-btn" onclick="changeDate(1)">›</button>
     <button class="today-btn" onclick="goToday()">오늘</button>
   </div>
 
   <div class="progress-section">
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="progressBar"></div>
+    <div class="progress-wrapper">
+      <div class="progress-top">
+        <span class="progress-label" id="progressLabel">오늘의 달성률</span>
+        <span class="progress-emoji" id="progressEmoji">🚀</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+      </div>
+      <div class="progress-text" id="progressText"></div>
     </div>
-    <div class="progress-text" id="progressText"></div>
   </div>
 
   <div class="role-list" id="roleList">
-    <div class="weekend-msg">불러오는 중...</div>
+    <div class="weekend-msg"><span class="big-emoji">📚</span>불러오는 중...</div>
   </div>
 </div>
 
+<div class="celebration" id="celebration"></div>
+
 <nav class="nav-bottom">
   <a href="/" class="active">
-    <span class="nav-icon">&#10003;</span>체크하기
+    <span class="nav-icon">✅</span>체크하기
   </a>
   <a href="/role/teacher.html">
-    <span class="nav-icon">&#128269;</span>점검하기
+    <span class="nav-icon">🔍</span>점검하기
   </a>
   <a href="/role/admin.html">
-    <span class="nav-icon">&#9881;</span>관리
+    <span class="nav-icon">⚙️</span>관리
   </a>
 </nav>
 
@@ -298,6 +517,7 @@ const dayNames = ['일요일','월요일','화요일','수요일','목요일','�
 let rolesData = [];
 let checksData = {};
 let currentDate = new Date();
+let prevPct = 0;
 
 function formatDate(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -334,11 +554,50 @@ function getFilteredRoles() {
   });
 }
 
+function getProgressEmoji(pct) {
+  if (pct === 0) return '🚀';
+  if (pct < 30) return '💪';
+  if (pct < 60) return '🔥';
+  if (pct < 90) return '⭐';
+  if (pct < 100) return '🎯';
+  return '🎉';
+}
+
+function getProgressLabel(pct) {
+  if (pct === 0) return '시작해볼까요?';
+  if (pct < 30) return '좋은 시작이에요!';
+  if (pct < 60) return '잘 하고 있어요!';
+  if (pct < 90) return '거의 다 했어요!';
+  if (pct < 100) return '조금만 더!';
+  return '모두 완료! 최고예요!';
+}
+
+function showCelebration() {
+  const container = document.getElementById('celebration');
+  container.innerHTML = '';
+  const colors = ['#6C63FF','#4ADE80','#FB923C','#F472B6','#38BDF8','#FBBF24'];
+  for (let i = 0; i < 40; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = Math.random() * 100 + '%';
+    confetti.style.top = '-10px';
+    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+    confetti.style.width = (Math.random() * 8 + 6) + 'px';
+    confetti.style.height = (Math.random() * 8 + 6) + 'px';
+    container.appendChild(confetti);
+  }
+  setTimeout(() => container.innerHTML = '', 2500);
+}
+
 async function loadRoles() {
   const res = await fetch('/api/roles');
   const data = await res.json();
   rolesData = data.roles;
   document.getElementById('className').textContent = data.className;
+  if (data.motto) {
+    document.getElementById('mottoText').textContent = '💬 ' + data.motto;
+  }
   loadChecks();
 }
 
@@ -355,9 +614,11 @@ function render() {
   const dow = getDayOfWeek();
 
   if (dow === 0 || dow === 6) {
-    container.innerHTML = '<div class="weekend-msg">주말에는 1인 1역이 없습니다 🎉</div>';
+    container.innerHTML = '<div class="weekend-msg"><span class="big-emoji">🎉</span>주말에는 쉬는 날이에요!<br><span style="font-size:0.85rem;color:#A8A5BD;margin-top:8px;display:inline-block;">푹 쉬고 월요일에 만나요 👋</span></div>';
     document.getElementById('progressBar').style.width = '0%';
     document.getElementById('progressText').innerHTML = '';
+    document.getElementById('progressLabel').textContent = '주말이에요';
+    document.getElementById('progressEmoji').textContent = '😴';
     return;
   }
 
@@ -384,8 +645,8 @@ function render() {
       else allDone = false;
 
       let statusBadge = '';
-      if (isApproved) statusBadge = '<span class="status-badge approved">확인됨</span>';
-      else if (isChecked) statusBadge = '<span class="status-badge done">완료</span>';
+      if (isApproved) statusBadge = '<span class="status-badge approved">확인됨 ✓</span>';
+      else if (isChecked) statusBadge = '<span class="status-badge done">완료!</span>';
       else statusBadge = '<span class="status-badge pending">미완료</span>';
 
       studentsHtml += `
@@ -393,7 +654,7 @@ function render() {
           <div class="check-btn" onclick="toggleCheck(${role.id}, '${student}', ${!isChecked})">${isChecked ? '✓' : ''}</div>
           <div class="student-info">
             <div class="student-name">${student}</div>
-            <div class="check-time">${isChecked && check.time ? check.time + ' 체크' : ''}</div>
+            <div class="check-time">${isChecked && check.time ? '⏰ ' + check.time : ''}</div>
           </div>
           ${statusBadge}
         </div>
@@ -402,10 +663,15 @@ function render() {
 
     if (allDone && role.students.length > 0) card.classList.add('all-done');
 
+    const doneBadge = (allDone && role.students.length > 0) ? '<span class="role-done-badge">완료! 👏</span>' : '';
+
     card.innerHTML = `
       <div class="role-header">
-        <span class="role-icon">${roleIcons[origIdx] || '📌'}</span>
-        ${role.role}
+        <div class="role-icon-bubble">
+          <span>${roleIcons[origIdx] || '📌'}</span>
+        </div>
+        <span class="role-name">${role.role}</span>
+        ${doneBadge}
       </div>
       ${studentsHtml}
     `;
@@ -413,12 +679,19 @@ function render() {
   });
 
   if (filtered.length === 0) {
-    container.innerHTML = '<div class="weekend-msg">오늘 표시할 역할이 없습니다</div>';
+    container.innerHTML = '<div class="weekend-msg"><span class="big-emoji">📭</span>오늘 표시할 역할이 없습니다</div>';
   }
 
   const pct = totalStudents > 0 ? Math.round((totalChecked / totalStudents) * 100) : 0;
   document.getElementById('progressBar').style.width = pct + '%';
   document.getElementById('progressText').innerHTML = `<strong>${totalChecked}</strong> / ${totalStudents} 완료 (${pct}%)`;
+  document.getElementById('progressEmoji').textContent = getProgressEmoji(pct);
+  document.getElementById('progressLabel').textContent = getProgressLabel(pct);
+
+  if (pct === 100 && prevPct < 100 && totalStudents > 0) {
+    showCelebration();
+  }
+  prevPct = pct;
 }
 
 async function toggleCheck(roleId, student, checked) {
