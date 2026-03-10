@@ -970,7 +970,7 @@ def hall_of_fame():
     rank = 1
     for i, r in enumerate(ranking):
         if i > 0 and r['question_count'] < ranking[i - 1]['question_count']:
-            rank = i + 1
+            rank += 1
         result.append({
             'id': r['id'],
             'grade': r['grade'],
