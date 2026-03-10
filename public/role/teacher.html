@@ -95,6 +95,29 @@
     outline: none;
     border-color: var(--primary);
   }
+  .toolbar .arrow-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 2px solid var(--primary-bg);
+    background: white;
+    color: var(--primary);
+    font-size: 1.3rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+  .toolbar .arrow-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: scale(1.05);
+  }
+  .toolbar .arrow-btn:active { transform: scale(0.95); }
   .toolbar button {
     padding: 7px 14px;
     border: none;
@@ -306,7 +329,9 @@
 </div>
 
 <div class="toolbar">
+  <button class="arrow-btn" onclick="changeDate(-1)">‹</button>
   <input type="date" id="dateInput">
+  <button class="arrow-btn" onclick="changeDate(1)">›</button>
   <button class="btn-today" onclick="goToday()">오늘</button>
   <button class="btn-approve-all" onclick="approveAllChecked()">✓ 전체 확인</button>
   <button class="btn-refresh" onclick="loadChecks()">↻ 새로고침</button>
@@ -353,6 +378,14 @@ let checksData = {};
 function getToday() {
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function changeDate(delta) {
+  const input = document.getElementById('dateInput');
+  const d = new Date(input.value + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  input.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  loadChecks();
 }
 
 function goToday() {
