@@ -107,18 +107,26 @@
                 const badges = ['rank-badge-1', 'rank-badge-2', 'rank-badge-3'];
                 const labels = ['1등', '2등', '3등'];
                 const icons = ['\u{1F3C6}', '\u{1F948}', '\u{1F949}'];
+                const rankNumStyles = [
+                    'text-5xl text-[#5C3300]/30',
+                    'text-4xl text-white/25',
+                    'text-4xl text-white/25'
+                ];
                 const count = grouped[rank].length;
                 podiumHtml += `
-                    <div class="${badges[rank-1]} rounded-2xl p-4 text-center">
-                        <div class="text-2xl mb-1">${icons[rank-1]}</div>
-                        <div class="text-lg font-heading font-bold ${rank === 1 ? 'text-[#5C3300]' : 'text-white'} mb-2">${labels[rank-1]} <span class="text-sm font-body ${rank === 1 ? 'text-[#5C3300]/70' : 'text-white/70'}">${count}명</span></div>
-                        <div class="flex flex-wrap justify-center gap-2">
-                            ${grouped[rank].map(r => `
-                                <div class="${rank === 1 ? 'bg-[#5C3300]/30' : 'bg-white/30'} backdrop-blur-sm rounded-xl px-4 py-2 ${r.is_me ? 'ring-2 ring-white' : ''}">
-                                    <div class="text-sm font-bold ${rank === 1 ? 'text-[#3A1F00]' : 'text-white'}">${r.grade}-${r.class_num} ${escapeHtml(r.name)}</div>
-                                    <div class="text-xs ${rank === 1 ? 'text-[#5C3300]' : 'text-white/80'}">${r.question_count}개</div>
-                                </div>
-                            `).join('')}
+                    <div class="${badges[rank-1]} rounded-2xl p-4 text-center relative overflow-hidden">
+                        <div class="absolute top-2 left-4 font-heading font-bold ${rankNumStyles[rank-1]}">${rank}</div>
+                        <div class="relative z-10">
+                            <div class="text-2xl mb-1">${icons[rank-1]}</div>
+                            <div class="text-lg font-heading font-bold ${rank === 1 ? 'text-[#5C3300]' : 'text-white'} mb-2">${labels[rank-1]} <span class="text-sm font-body ${rank === 1 ? 'text-[#5C3300]/70' : 'text-white/70'}">${count}명</span></div>
+                            <div class="flex flex-wrap justify-center gap-2">
+                                ${grouped[rank].map(r => `
+                                    <div class="${rank === 1 ? 'bg-[#5C3300]/30' : 'bg-white/30'} backdrop-blur-sm rounded-xl px-4 py-2 ${r.is_me ? 'ring-2 ring-white' : ''}">
+                                        <div class="text-sm font-bold ${rank === 1 ? 'text-[#3A1F00]' : 'text-white'}">${r.grade}-${r.class_num} ${escapeHtml(r.name)}</div>
+                                        <div class="text-xs ${rank === 1 ? 'text-[#5C3300]' : 'text-white/80'}">${r.question_count}개</div>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
                     </div>
                 `;
