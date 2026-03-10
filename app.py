@@ -115,16 +115,18 @@ def init_db():
         pw_hash = hashlib.sha256('admin123'.encode()).hexdigest()
         conn.execute("INSERT INTO admins (username, password_hash) VALUES (?, ?)", ('admin', pw_hash))
 
-    # Migrate existing question dates from UTC to KST (one-time)
-    migrated = conn.execute("SELECT value FROM settings WHERE key = 'dates_migrated_to_kst'").fetchone()
+    # Migrate existing question dates from UTC to KST
+    # v2: force re-run to fix questions that weren't migrated in v1
+    migrated = conn.execute("SELECT value FROM settings WHERE key = 'dates_migrated_to_kst_v2'").fetchone()
     if not migrated:
         conn.execute("""
             UPDATE questions
             SET created_date = DATE(created_at, '+9 hours')
             WHERE created_at IS NOT NULL
+              AND created_date != DATE(created_at, '+9 hours')
         """)
         conn.execute(
-            "INSERT OR REPLACE INTO settings (key, value) VALUES ('dates_migrated_to_kst', '1')"
+            "INSERT OR REPLACE INTO settings (key, value) VALUES ('dates_migrated_to_kst_v2', '1')"
         )
 
     conn.commit()
