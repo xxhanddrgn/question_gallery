@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1인 1역 - 관리자 설정</title>
+<style>
+  :root {
+    --primary: #8b5cf6;
+    --primary-dark: #7c3aed;
+    --green: #22c55e;
+    --red: #ef4444;
+    --bg: #f5f3ff;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    text-align: center;
+    padding: 20px 16px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(139,92,246,0.3);
+  }
+  .header h1 { font-size: 1.5rem; font-weight: 800; }
+  .header p { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
+  .content {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 16px 12px 100px;
+  }
+  .section {
+    background: white;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .section h2 {
+    font-size: 1.1rem;
+    color: var(--primary-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .form-group {
+    margin-bottom: 14px;
+  }
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .form-group input[type="text"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  .role-editor {
+    border: 2px solid #e9e5ff;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+    position: relative;
+    background: #faf8ff;
+  }
+  .role-editor .role-num {
+    position: absolute;
+    top: -10px;
+    left: 14px;
+    background: var(--primary);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 999px;
+  }
+  .role-editor .role-field {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .role-editor .role-field .role-name-input {
+    flex: 1;
+    min-width: 140px;
+    padding: 8px 12px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .role-editor .role-field .students-input {
+    flex: 2;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  .role-editor .role-field .role-name-input:focus,
+  .role-editor .role-field .students-input:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  .role-editor .remove-role-btn {
+    background: none;
+    border: none;
+    color: var(--red);
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 6px;
+    line-height: 1;
+    border-radius: 6px;
+  }
+  .role-editor .remove-role-btn:hover { background: #fef2f2; }
+
+  .days-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .days-row .days-label {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .day-chip {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid var(--border);
+    background: white;
+    color: var(--text-light);
+    transition: all 0.2s;
+  }
+  .day-chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-success { background: var(--green); color: white; }
+  .btn-success:hover { background: #16a34a; }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
+  .btn-outline:hover { background: #f5f3ff; }
+
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #1e293b;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: transform 0.3s ease;
+    z-index: 200;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .help-text {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 4px;
+  }
+
+  .nav-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    z-index: 100;
+  }
+  .nav-bottom a {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0 8px;
+    text-decoration: none;
+    color: var(--text-light);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .nav-bottom a.active { color: var(--primary-dark); }
+  .nav-bottom a .nav-icon { display: block; font-size: 1.3rem; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>관리자 설정</h1>
+  <p>역할과 학생 이름을 편집하세요</p>
+</div>
+
+<div class="content">
+  <div class="section">
+    <h2>기본 정보</h2>
+    <div class="form-group">
+      <label>반 이름</label>
+      <input type="text" id="classNameInput" placeholder="예: 6학년 1반">
+    </div>
+    <div class="form-group">
+      <label>구호 (슬로건)</label>
+      <input type="text" id="mottoInput" placeholder="예: 우리 모두 지켜요">
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>1인 1역 편집</h2>
+    <p class="help-text" style="margin-bottom: 14px;">역할 이름과 담당 학생을 입력하세요. 학생이 여러 명이면 쉼표(,)로 구분합니다.<br>요일 버튼을 클릭해서 해당 역할이 나타나는 요일을 선택하세요.</p>
+    <div id="rolesContainer"></div>
+    <div class="btn-row" style="margin-top: 12px;">
+      <button class="btn btn-outline" onclick="addRole()">+ 역할 추가</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>저장</h2>
+    <div class="btn-row">
+      <button class="btn btn-success" onclick="saveAll()">저장하기</button>
+      <button class="btn btn-primary" onclick="loadAll()">되돌리기</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>데이터 관리</h2>
+    <p class="help-text" style="margin-bottom: 12px;">특정 날짜의 체크 데이터를 초기화할 수 있습니다.</p>
+    <div class="form-group">
+      <label>초기화할 날짜</label>
+      <input type="date" id="resetDateInput" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:1rem;">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-danger" onclick="resetDate()">해당 날짜 초기화</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<nav class="nav-bottom">
+  <a href="/">
+    <span class="nav-icon">&#10003;</span>체크하기
+  </a>
+  <a href="/role/teacher.html">
+    <span class="nav-icon">&#128269;</span>점검하기
+  </a>
+  <a href="/role/admin.html" class="active">
+    <span class="nav-icon">&#9881;</span>관리
+  </a>
+</nav>
+
+<script>
+const dayLabels = ['월','화','수','목','금'];
+const dayValues = [1, 2, 3, 4, 5];
+let rolesData = [];
+let roleIdCounter = 100;
+
+function getToday() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+async function loadAll() {
+  const res = await fetch('/api/roles');
+  const data = await res.json();
+  document.getElementById('classNameInput').value = data.className;
+  document.getElementById('mottoInput').value = data.motto;
+  rolesData = data.roles.map(r => ({
+    ...r,
+    days: r.days || [1,2,3,4,5]
+  }));
+  renderRoles();
+}
+
+function renderRoles() {
+  const container = document.getElementById('rolesContainer');
+  container.innerHTML = '';
+  rolesData.forEach((role, idx) => {
+    const div = document.createElement('div');
+    div.className = 'role-editor';
+
+    let daysHtml = '<div class="days-row"><span class="days-label">요일:</span>';
+    dayLabels.forEach((label, di) => {
+      const active = (role.days || [1,2,3,4,5]).includes(dayValues[di]) ? 'active' : '';
+      daysHtml += `<span class="day-chip ${active}" data-idx="${idx}" data-day="${dayValues[di]}" onclick="toggleDay(this)">${label}</span>`;
+    });
+    daysHtml += '</div>';
+
+    div.innerHTML = `
+      <span class="role-num">${idx + 1}</span>
+      <div class="role-field">
+        <input type="text" class="role-name-input" value="${role.role}" placeholder="역할 이름" data-idx="${idx}">
+        <input type="text" class="students-input" value="${role.students.join(', ')}" placeholder="학생 이름 (쉼표 구분)" data-idx="${idx}">
+        <button class="remove-role-btn" onclick="removeRole(${idx})" title="삭제">✕</button>
+      </div>
+      ${daysHtml}
+    `;
+    container.appendChild(div);
+  });
+}
+
+function toggleDay(el) {
+  const idx = parseInt(el.dataset.idx);
+  const day = parseInt(el.dataset.day);
+  if (!rolesData[idx].days) rolesData[idx].days = [1,2,3,4,5];
+  const arr = rolesData[idx].days;
+  const i = arr.indexOf(day);
+  if (i >= 0) {
+    arr.splice(i, 1);
+    el.classList.remove('active');
+  } else {
+    arr.push(day);
+    arr.sort();
+    el.classList.add('active');
+  }
+}
+
+function addRole() {
+  rolesData.push({ id: ++roleIdCounter, role: '', students: [], days: [1,2,3,4,5] });
+  renderRoles();
+  const inputs = document.querySelectorAll('.role-name-input');
+  if (inputs.length > 0) inputs[inputs.length - 1].focus();
+}
+
+function removeRole(idx) {
+  if (confirm(`"${rolesData[idx].role || '(빈 역할)'}"을(를) 삭제하시겠습니까?`)) {
+    rolesData.splice(idx, 1);
+    renderRoles();
+  }
+}
+
+function collectFormData() {
+  const roleInputs = document.querySelectorAll('.role-name-input');
+  const studentInputs = document.querySelectorAll('.students-input');
+  const roles = [];
+  roleInputs.forEach((input, idx) => {
+    const roleName = input.value.trim();
+    const studentsStr = studentInputs[idx].value.trim();
+    const students = studentsStr ? studentsStr.split(',').map(s => s.trim()).filter(s => s) : [];
+    roles.push({
+      id: rolesData[idx]?.id || idx + 1,
+      role: roleName,
+      students: students,
+      days: rolesData[idx]?.days || [1,2,3,4,5]
+    });
+  });
+  return roles;
+}
+
+async function saveAll() {
+  const roles = collectFormData();
+  const className = document.getElementById('classNameInput').value.trim();
+  const motto = document.getElementById('mottoInput').value.trim();
+
+  if (!className) { showToast('반 이름을 입력하세요'); return; }
+  const emptyRole = roles.find(r => !r.role);
+  if (emptyRole) { showToast('빈 역할 이름이 있습니다'); return; }
+
+  await fetch('/api/roles', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ className, motto, roles })
+  });
+
+  rolesData = roles;
+  showToast('저장되었습니다!');
+}
+
+async function resetDate() {
+  const date = document.getElementById('resetDateInput').value;
+  if (!date) { showToast('날짜를 선택하세요'); return; }
+  if (!confirm(`${date}의 모든 체크 데이터를 초기화하시겠습니까?`)) return;
+  await fetch(`/api/checks/${date}`, { method: 'DELETE' });
+  showToast(`${date} 데이터가 초기화되었습니다`);
+}
+
+document.getElementById('resetDateInput').value = getToday();
+loadAll();
+</script>
+</body>
+</html>

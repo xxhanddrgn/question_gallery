@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1인 1역 - 교사 점검</title>
+<style>
+  :root {
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --green: #22c55e;
+    --green-light: #dcfce7;
+    --yellow: #f59e0b;
+    --yellow-light: #fef3c7;
+    --red: #ef4444;
+    --bg: #f0f5ff;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    text-align: center;
+    padding: 20px 16px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(59,130,246,0.3);
+  }
+  .header .class-name {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+  .header h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+  .toolbar {
+    background: white;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+    position: sticky;
+    top: 72px;
+    z-index: 99;
+  }
+  .toolbar input[type="date"] {
+    font-size: 1rem;
+    padding: 6px 12px;
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  .toolbar button {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: white;
+  }
+  .btn-today { background: var(--primary); }
+  .btn-approve-all { background: var(--green); }
+  .btn-refresh { background: var(--yellow); color: #1f2937; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .stat-card .stat-num {
+    font-size: 1.8rem;
+    font-weight: 800;
+  }
+  .stat-card .stat-label {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+  .stat-total .stat-num { color: var(--primary); }
+  .stat-done .stat-num { color: var(--green); }
+  .stat-pending .stat-num { color: var(--red); }
+
+  .check-table-wrapper {
+    padding: 0 12px 100px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .check-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-top: 12px;
+  }
+  .check-table thead th {
+    background: var(--primary);
+    color: white;
+    padding: 12px 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    position: sticky;
+    top: 130px;
+    z-index: 10;
+  }
+  .check-table tbody tr {
+    transition: background 0.2s;
+  }
+  .check-table tbody tr:hover {
+    background: #f8fafc;
+  }
+  .check-table tbody tr.row-approved {
+    background: #eff6ff;
+  }
+  .check-table tbody tr.row-checked {
+    background: var(--green-light);
+  }
+  .check-table tbody tr.row-unchecked {
+    background: #fff;
+  }
+  .check-table tbody td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .check-table tbody td:nth-child(1) {
+    font-weight: 700;
+    color: var(--primary-dark);
+    text-align: left;
+    padding-left: 16px;
+  }
+  .check-table tbody td:nth-child(2) {
+    font-weight: 600;
+  }
+
+  .status-icon {
+    font-size: 1.2rem;
+  }
+  .approve-btn {
+    padding: 5px 12px;
+    border: 2px solid var(--green);
+    background: white;
+    color: var(--green);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .approve-btn:hover {
+    background: var(--green);
+    color: white;
+  }
+  .approve-btn.approved {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
+  .approve-btn.approved:hover {
+    background: var(--red);
+    border-color: var(--red);
+  }
+
+  .nav-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    z-index: 100;
+  }
+  .nav-bottom a {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0 8px;
+    text-decoration: none;
+    color: var(--text-light);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .nav-bottom a.active { color: var(--primary-dark); }
+  .nav-bottom a .nav-icon { display: block; font-size: 1.3rem; margin-bottom: 2px; }
+
+  .empty-msg {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-light);
+  }
+
+  @media (max-width: 600px) {
+    .stats { grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px; }
+    .stat-card { padding: 10px; }
+    .stat-card .stat-num { font-size: 1.4rem; }
+    .check-table tbody td { padding: 8px 6px; font-size: 0.82rem; }
+    .hide-mobile { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="class-name" id="className">6학년 1반</div>
+  <h1>교사 점검 페이지</h1>
+</div>
+
+<div class="toolbar">
+  <input type="date" id="dateInput">
+  <button class="btn-today" onclick="goToday()">오늘</button>
+  <button class="btn-approve-all" onclick="approveAllChecked()">전체 확인</button>
+  <button class="btn-refresh" onclick="loadChecks()">새로고침</button>
+</div>
+
+<div class="stats">
+  <div class="stat-card stat-total">
+    <div class="stat-num" id="statTotal">0</div>
+    <div class="stat-label">전체</div>
+  </div>
+  <div class="stat-card stat-done">
+    <div class="stat-num" id="statDone">0</div>
+    <div class="stat-label">체크 완료</div>
+  </div>
+  <div class="stat-card stat-pending">
+    <div class="stat-num" id="statPending">0</div>
+    <div class="stat-label">미완료</div>
+  </div>
+</div>
+
+<div class="check-table-wrapper">
+  <table class="check-table">
+    <thead>
+      <tr>
+        <th>역할</th>
+        <th>이름</th>
+        <th>상태</th>
+        <th>체크 시간</th>
+        <th class="hide-mobile">확인 시간</th>
+        <th>교사 확인</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <tr><td colspan="6" class="empty-msg">불러오는 중...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<nav class="nav-bottom">
+  <a href="/">
+    <span class="nav-icon">&#10003;</span>체크하기
+  </a>
+  <a href="/role/teacher.html" class="active">
+    <span class="nav-icon">&#128269;</span>점검하기
+  </a>
+  <a href="/role/admin.html">
+    <span class="nav-icon">&#9881;</span>관리
+  </a>
+</nav>
+
+<script>
+let rolesData = [];
+let checksData = {};
+
+function getToday() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function goToday() {
+  document.getElementById('dateInput').value = getToday();
+  loadChecks();
+}
+
+async function loadRoles() {
+  const res = await fetch('/api/roles');
+  const data = await res.json();
+  rolesData = data.roles;
+  document.getElementById('className').textContent = data.className;
+  loadChecks();
+}
+
+async function loadChecks() {
+  const date = document.getElementById('dateInput').value;
+  const res = await fetch(`/api/checks/${date}`);
+  checksData = await res.json();
+  render();
+}
+
+function render() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+
+  let total = 0, done = 0;
+
+  rolesData.forEach(role => {
+    role.students.forEach(student => {
+      total++;
+      const key = `${role.id}_${student}`;
+      const check = checksData[key];
+      const isChecked = check && check.checked;
+      const isApproved = check && check.approved;
+      if (isChecked) done++;
+
+      const tr = document.createElement('tr');
+      if (isApproved) tr.className = 'row-approved';
+      else if (isChecked) tr.className = 'row-checked';
+      else tr.className = 'row-unchecked';
+
+      let statusIcon = '⬜';
+      if (isApproved) statusIcon = '🔵';
+      else if (isChecked) statusIcon = '✅';
+
+      let approveBtn = '';
+      if (isChecked && !isApproved) {
+        approveBtn = `<button class="approve-btn" onclick="approve(${role.id},'${student}',true)">확인</button>`;
+      } else if (isApproved) {
+        approveBtn = `<button class="approve-btn approved" onclick="approve(${role.id},'${student}',false)">확인됨</button>`;
+      } else {
+        approveBtn = '<span style="color:#d1d5db">-</span>';
+      }
+
+      tr.innerHTML = `
+        <td>${role.role}</td>
+        <td>${student}</td>
+        <td><span class="status-icon">${statusIcon}</span></td>
+        <td>${isChecked && check.time ? check.time : '-'}</td>
+        <td class="hide-mobile">${isApproved && check.approveTime ? check.approveTime : '-'}</td>
+        <td>${approveBtn}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statPending').textContent = total - done;
+}
+
+async function approve(roleId, student, approved) {
+  const date = document.getElementById('dateInput').value;
+  await fetch('/api/approve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date, roleId, student, approved })
+  });
+  loadChecks();
+}
+
+async function approveAllChecked() {
+  const date = document.getElementById('dateInput').value;
+  const promises = [];
+  rolesData.forEach(role => {
+    role.students.forEach(student => {
+      const key = `${role.id}_${student}`;
+      const check = checksData[key];
+      if (check && check.checked && !check.approved) {
+        promises.push(fetch('/api/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date, roleId: role.id, student, approved: true })
+        }));
+      }
+    });
+  });
+  await Promise.all(promises);
+  loadChecks();
+}
+
+document.getElementById('dateInput').value = getToday();
+document.getElementById('dateInput').addEventListener('change', loadChecks);
+loadRoles();
+setInterval(loadChecks, 15000);
+</script>
+</body>
+</html>

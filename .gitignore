@@ -1,20 +1,11 @@
-# Database & data files
-data/
-*.db
-
-# Secret key
-.secret_key
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
+node_modules/
+data.json
 .env
-
-# IDE
-.vscode/
-.idea/
 
 # OS
 .DS_Store
 Thumbs.db
+
+# IDE
+.vscode/
+.idea/

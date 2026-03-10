@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1인 1역 체크리스트</title>
+<style>
+  :root {
+    --primary: #f59e0b;
+    --primary-dark: #d97706;
+    --green: #22c55e;
+    --green-light: #dcfce7;
+    --red: #ef4444;
+    --bg: #fefce8;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+  }
+  .container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+    text-align: center;
+    padding: 10px 16px;
+    box-shadow: 0 2px 10px rgba(245,158,11,0.3);
+    flex-shrink: 0;
+  }
+  .header .class-name {
+    font-size: 0.8rem;
+    opacity: 0.9;
+  }
+  .header h1 {
+    font-size: 1.3rem;
+    font-weight: 800;
+  }
+  .date-bar {
+    background: white;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+  }
+  .date-bar .arrow-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    background: white;
+    color: var(--primary-dark);
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .date-bar .arrow-btn:hover {
+    background: var(--primary);
+    color: white;
+  }
+  .date-bar .date-display {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 180px;
+    text-align: center;
+  }
+  .date-bar .date-display .day-name {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+  .date-bar .today-btn {
+    padding: 5px 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .progress-section {
+    padding: 6px 16px;
+    flex-shrink: 0;
+  }
+  .progress-bar-bg {
+    background: #e5e7eb;
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    background: linear-gradient(90deg, var(--primary), var(--green));
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+  }
+  .progress-text {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin-top: 3px;
+  }
+  .progress-text strong { color: var(--primary-dark); }
+
+  .role-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 10px 50px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 8px;
+    align-content: start;
+  }
+  .role-card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    border-left: 4px solid var(--primary);
+    transition: border-color 0.3s;
+  }
+  .role-card.all-done {
+    border-left-color: var(--green);
+  }
+  .role-card .role-header {
+    padding: 8px 12px 4px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .role-card .role-header .role-icon {
+    font-size: 1rem;
+  }
+  .student-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    gap: 10px;
+    transition: background 0.2s;
+  }
+  .student-row:not(:last-child) {
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .student-row.checked {
+    background: var(--green-light);
+  }
+  .student-row .check-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2.5px solid #d1d5db;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    font-size: 1.1rem;
+  }
+  .student-row .check-btn:active {
+    transform: scale(0.9);
+  }
+  .student-row.checked .check-btn {
+    border-color: var(--green);
+    background: var(--green);
+    color: white;
+  }
+  .student-row .student-info {
+    flex: 1;
+  }
+  .student-row .student-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .student-row .check-time {
+    font-size: 0.7rem;
+    color: var(--text-light);
+  }
+  .student-row .status-badge {
+    font-size: 0.68rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .status-badge.pending { background: #fef3c7; color: #92400e; }
+  .status-badge.done { background: #dcfce7; color: #166534; }
+  .status-badge.approved { background: #dbeafe; color: #1e40af; }
+
+  .nav-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    z-index: 100;
+  }
+  .nav-bottom a {
+    flex: 1;
+    text-align: center;
+    padding: 8px 0 6px;
+    text-decoration: none;
+    color: var(--text-light);
+    font-size: 0.7rem;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+  .nav-bottom a.active { color: var(--primary-dark); }
+  .nav-bottom a .nav-icon { display: block; font-size: 1.1rem; margin-bottom: 1px; }
+
+  .weekend-msg {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-light);
+    font-size: 1.1rem;
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 1200px) {
+    .role-list { grid-template-columns: repeat(3, 1fr); padding: 8px 20px 50px; }
+  }
+  @media (min-width: 1600px) {
+    .role-list { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="class-name" id="className">6학년 1반</div>
+    <h1>1인 1역 체크리스트</h1>
+  </div>
+
+  <div class="date-bar">
+    <button class="arrow-btn" onclick="changeDate(-1)">&lt;</button>
+    <div class="date-display">
+      <div id="dateText"></div>
+      <div class="day-name" id="dayText"></div>
+    </div>
+    <button class="arrow-btn" onclick="changeDate(1)">&gt;</button>
+    <button class="today-btn" onclick="goToday()">오늘</button>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+    <div class="progress-text" id="progressText"></div>
+  </div>
+
+  <div class="role-list" id="roleList">
+    <div class="weekend-msg">불러오는 중...</div>
+  </div>
+</div>
+
+<nav class="nav-bottom">
+  <a href="/" class="active">
+    <span class="nav-icon">&#10003;</span>체크하기
+  </a>
+  <a href="/role/teacher.html">
+    <span class="nav-icon">&#128269;</span>점검하기
+  </a>
+  <a href="/role/admin.html">
+    <span class="nav-icon">&#9881;</span>관리
+  </a>
+</nav>
+
+<script>
+const roleIcons = ['📋','♻️','🧹','🥛','🧯','👔','🧹','🚪','📮','🌬️','📚','🗑️','🪴','💡','🔔'];
+const dayNames = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+let rolesData = [];
+let checksData = {};
+let currentDate = new Date();
+
+function formatDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function updateDateDisplay() {
+  const dateStr = formatDate(currentDate);
+  const dayOfWeek = currentDate.getDay();
+  document.getElementById('dateText').textContent = dateStr;
+  document.getElementById('dayText').textContent = dayNames[dayOfWeek];
+}
+
+function changeDate(delta) {
+  currentDate.setDate(currentDate.getDate() + delta);
+  updateDateDisplay();
+  loadChecks();
+}
+
+function goToday() {
+  currentDate = new Date();
+  updateDateDisplay();
+  loadChecks();
+}
+
+function getDayOfWeek() {
+  return currentDate.getDay();
+}
+
+function getFilteredRoles() {
+  const dow = getDayOfWeek();
+  return rolesData.filter(role => {
+    const days = role.days || [1,2,3,4,5];
+    return days.includes(dow);
+  });
+}
+
+async function loadRoles() {
+  const res = await fetch('/api/roles');
+  const data = await res.json();
+  rolesData = data.roles;
+  document.getElementById('className').textContent = data.className;
+  loadChecks();
+}
+
+async function loadChecks() {
+  const date = formatDate(currentDate);
+  const res = await fetch(`/api/checks/${date}`);
+  checksData = await res.json();
+  render();
+}
+
+function render() {
+  const container = document.getElementById('roleList');
+  container.innerHTML = '';
+  const dow = getDayOfWeek();
+
+  if (dow === 0 || dow === 6) {
+    container.innerHTML = '<div class="weekend-msg">주말에는 1인 1역이 없습니다 🎉</div>';
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressText').innerHTML = '';
+    return;
+  }
+
+  const filtered = getFilteredRoles();
+  let totalStudents = 0;
+  let totalChecked = 0;
+
+  filtered.forEach((role, idx) => {
+    const origIdx = rolesData.indexOf(role);
+    const card = document.createElement('div');
+    card.className = 'role-card';
+
+    let allDone = true;
+    let studentsHtml = '';
+
+    role.students.forEach(student => {
+      totalStudents++;
+      const key = `${role.id}_${student}`;
+      const check = checksData[key];
+      const isChecked = check && check.checked;
+      const isApproved = check && check.approved;
+
+      if (isChecked) totalChecked++;
+      else allDone = false;
+
+      let statusBadge = '';
+      if (isApproved) statusBadge = '<span class="status-badge approved">확인됨</span>';
+      else if (isChecked) statusBadge = '<span class="status-badge done">완료</span>';
+      else statusBadge = '<span class="status-badge pending">미완료</span>';
+
+      studentsHtml += `
+        <div class="student-row ${isChecked ? 'checked' : ''}" data-role-id="${role.id}" data-student="${student}">
+          <div class="check-btn" onclick="toggleCheck(${role.id}, '${student}', ${!isChecked})">${isChecked ? '✓' : ''}</div>
+          <div class="student-info">
+            <div class="student-name">${student}</div>
+            <div class="check-time">${isChecked && check.time ? check.time + ' 체크' : ''}</div>
+          </div>
+          ${statusBadge}
+        </div>
+      `;
+    });
+
+    if (allDone && role.students.length > 0) card.classList.add('all-done');
+
+    card.innerHTML = `
+      <div class="role-header">
+        <span class="role-icon">${roleIcons[origIdx] || '📌'}</span>
+        ${role.role}
+      </div>
+      ${studentsHtml}
+    `;
+    container.appendChild(card);
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="weekend-msg">오늘 표시할 역할이 없습니다</div>';
+  }
+
+  const pct = totalStudents > 0 ? Math.round((totalChecked / totalStudents) * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').innerHTML = `<strong>${totalChecked}</strong> / ${totalStudents} 완료 (${pct}%)`;
+}
+
+async function toggleCheck(roleId, student, checked) {
+  const date = formatDate(currentDate);
+  await fetch('/api/checks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date, roleId, student, checked })
+  });
+  loadChecks();
+}
+
+updateDateDisplay();
+loadRoles();
+setInterval(loadChecks, 30000);
+</script>
+</body>
+</html>
