@@ -34,8 +34,26 @@
     }
     </script>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+    .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; }
+    .confetti {
+        position: absolute;
+        width: 10px; height: 10px;
+        top: -10px;
+        opacity: 0;
+        animation: confettiFall 1s ease-out forwards;
+    }
+    .confetti.circle { border-radius: 50%; }
+    .confetti.square { border-radius: 2px; }
+    .confetti.star { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 10px solid currentColor; background: none !important; }
+    @keyframes confettiFall {
+        0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+        100% { opacity: 0; transform: translateY(100vh) rotate(720deg) scale(0.5); }
+    }
+    </style>
 </head>
 <body class="font-body bg-cream text-txt min-h-screen">
+    <div id="confetti-container" class="confetti-container"></div>
     <div class="max-w-[600px] mx-auto">
         <!-- Header -->
         <div class="hall-header px-5 py-8 text-center">
@@ -159,8 +177,29 @@
         return div.innerHTML;
     }
 
+    // Confetti effect
+    function launchConfetti() {
+        const container = document.getElementById('confetti-container');
+        const colors = ['#FFB87A', '#FF9B9B', '#FFE78A', '#8FE6B0', '#8FC9F9', '#C5B5E8', '#FF6B6B', '#FFD93D'];
+        const shapes = ['circle', 'square', 'star'];
+        for (let i = 0; i < 80; i++) {
+            const el = document.createElement('div');
+            const shape = shapes[Math.floor(Math.random() * shapes.length)];
+            el.className = `confetti ${shape}`;
+            el.style.left = Math.random() * 100 + '%';
+            el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            el.style.animationDelay = Math.random() * 0.4 + 's';
+            el.style.animationDuration = (0.6 + Math.random() * 0.6) + 's';
+            el.style.width = (6 + Math.random() * 8) + 'px';
+            el.style.height = (6 + Math.random() * 8) + 'px';
+            container.appendChild(el);
+        }
+        setTimeout(() => { container.innerHTML = ''; }, 1500);
+    }
+
     // Init
     loadRanking();
+    launchConfetti();
     setInterval(loadRanking, 30000);
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) loadRanking();
