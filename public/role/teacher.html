@@ -375,13 +375,24 @@ async function loadChecks() {
   render();
 }
 
+function getFilteredRoles() {
+  const dateStr = document.getElementById('dateInput').value;
+  const d = new Date(dateStr + 'T00:00:00');
+  const dow = d.getDay();
+  return rolesData.filter(role => {
+    const days = role.days || [1,2,3,4,5];
+    return days.includes(dow);
+  });
+}
+
 function render() {
   const container = document.getElementById('checkList');
   container.innerHTML = '';
 
+  const filtered = getFilteredRoles();
   let total = 0, done = 0;
 
-  rolesData.forEach(role => {
+  filtered.forEach(role => {
     role.students.forEach(student => {
       total++;
       const key = `${role.id}_${student}`;
@@ -428,7 +439,16 @@ function render() {
     });
   });
 
-  if (total === 0) {
+  if (filtered.length === 0) {
+    const dateStr = document.getElementById('dateInput').value;
+    const d = new Date(dateStr + 'T00:00:00');
+    const dow = d.getDay();
+    if (dow === 0 || dow === 6) {
+      container.innerHTML = '<div class="empty-msg"><span class="big-emoji">🎉</span>주말에는 쉬는 날이에요!</div>';
+    } else {
+      container.innerHTML = '<div class="empty-msg"><span class="big-emoji">📭</span>오늘 해당하는 역할이 없습니다</div>';
+    }
+  } else if (total === 0) {
     container.innerHTML = '<div class="empty-msg"><span class="big-emoji">📭</span>표시할 데이터가 없습니다</div>';
   }
 
@@ -450,7 +470,8 @@ async function approve(roleId, student, approved) {
 async function approveAllChecked() {
   const date = document.getElementById('dateInput').value;
   const promises = [];
-  rolesData.forEach(role => {
+  const filtered = getFilteredRoles();
+  filtered.forEach(role => {
     role.students.forEach(student => {
       const key = `${role.id}_${student}`;
       const check = checksData[key];
