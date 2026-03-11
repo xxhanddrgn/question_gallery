@@ -43,7 +43,7 @@ function getDefaultData() {
       { id: 3, role: "교실 쓸기, 닦기", students: ["김윤슬", "정민찬"], days: [1,3,5] },
       { id: 4, role: "우유 관리사", students: ["신주환", "최예준"], days: [1,2,3,4,5] },
       { id: 5, role: "소방관", students: ["한소율"], days: [1,2,3,4,5] },
-      { id: 6, role: "옷걸이 정리, 크롬북 정리", students: ["이초연"], days: [1,2,3,4,5] },
+      { id: 6, role: "옷걸이 정리, 크롬북 정리, 교실 환경 정리", students: ["이초연"], days: [1,2,3,4,5] },
       { id: 7, role: "복도 쓸기, 닦기", students: ["정태준", "임아현"], days: [1,3,5] },
       { id: 8, role: "출입문 지킴이", students: ["권재우"], days: [1,2,3,4,5] },
       { id: 9, role: "우체부", students: ["김예빈"], days: [1,2,3,4,5] },
