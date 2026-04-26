@@ -480,7 +480,7 @@ function renderPagination(page, totalPages, totalCount) {
         <div class="flex items-center justify-center gap-1.5 mt-4 mb-2">
             ${buttons.join('')}
         </div>
-        <p class="text-center text-xs text-txt-lighter">${totalCount}개 중 ${(page-1)*30+1}-${Math.min(page*30, totalCount)}번째</p>
+        <p class="text-center text-xs text-txt-lighter">${totalCount}개 중 ${(page-1)*20+1}-${Math.min(page*20, totalCount)}번째</p>
     `;
 }
 

@@ -319,7 +319,7 @@ def get_questions():
     grade_filter = request.args.get('grade', '')  # Feature 1: grade filter
     page = request.args.get('page', '1')
     page = max(1, int(page)) if page.isdigit() else 1
-    per_page = 30
+    per_page = 20
 
     conn = get_db()
     is_admin = 'admin_id' in session and session.get('admin_student_mode')
