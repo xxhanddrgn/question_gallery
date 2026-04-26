@@ -317,6 +317,9 @@ def get_questions():
     target_date = request.args.get('date', kst_today())
     sort = request.args.get('sort', 'latest')
     grade_filter = request.args.get('grade', '')  # Feature 1: grade filter
+    page = request.args.get('page', '1')
+    page = max(1, int(page)) if page.isdigit() else 1
+    per_page = 30
 
     conn = get_db()
     is_admin = 'admin_id' in session and session.get('admin_student_mode')
@@ -334,6 +337,23 @@ def get_questions():
         grade_clause = 'AND s.grade = ?'
         params.append(int(grade_filter))
 
+    count_params = [target_date]
+    count_grade_clause = ''
+    if grade_filter and grade_filter.isdigit():
+        count_grade_clause = 'AND s.grade = ?'
+        count_params.append(int(grade_filter))
+
+    total_count = conn.execute(f'''
+        SELECT COUNT(*) FROM questions q
+        JOIN students s ON q.student_id = s.id
+        WHERE q.created_date = ? AND q.is_deleted = 0 {count_grade_clause}
+    ''', count_params).fetchone()[0]
+
+    total_pages = max(1, (total_count + per_page - 1) // per_page)
+    if page > total_pages:
+        page = total_pages
+    offset = (page - 1) * per_page
+
     questions = conn.execute(f'''
         SELECT q.id, q.content, q.created_at, q.created_date, q.student_id,
                s.grade, s.class_num, s.student_num, s.name,
@@ -345,7 +365,8 @@ def get_questions():
         WHERE q.created_date = ? AND q.is_deleted = 0 {grade_clause}
         GROUP BY q.id
         ORDER BY {order}
-    ''', params).fetchall()
+        LIMIT ? OFFSET ?
+    ''', params + [per_page, offset]).fetchall()
 
     result = []
     for q in questions:
@@ -380,7 +401,10 @@ def get_questions():
         'questions': result,
         'already_posted_today': today_question is not None if not is_admin else True,
         'date': target_date,
-        'total_count': len(result),
+        'total_count': total_count,
+        'page': page,
+        'total_pages': total_pages,
+        'per_page': per_page,
         'is_admin': is_admin,
     })
 

@@ -2,6 +2,7 @@
 let currentDate = getLocalToday();
 let currentSort = 'latest';
 let currentGradeFilter = '';  // Feature 1: grade filter
+let currentPage = 1;
 let isAdminMode = false;  // Feature 3: admin mode
 
 // Helpers
@@ -333,6 +334,7 @@ function setupGradeFilter() {
             btn.classList.add('active', 'bg-gradient-to-r', 'from-pastel-orange', 'to-pastel-coral', '!text-white', '!border-transparent');
             btn.classList.remove('bg-white', 'text-txt-light');
             currentGradeFilter = btn.dataset.grade;
+            currentPage = 1;
             loadQuestions();
         });
     });
@@ -348,7 +350,7 @@ function setupGradeFilter() {
 // Load Questions
 async function loadQuestions() {
     try {
-        let url = `/api/questions?date=${currentDate}&sort=${currentSort}`;
+        let url = `/api/questions?date=${currentDate}&sort=${currentSort}&page=${currentPage}`;
         if (currentGradeFilter) {
             url += `&grade=${currentGradeFilter}`;
         }
@@ -419,6 +421,8 @@ async function loadQuestions() {
             </div>`;
         }).join('');
 
+        renderPagination(data.page, data.total_pages, data.total_count);
+
     } catch (err) {
         showToast(err.message, 'error');
     }
@@ -428,6 +432,56 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+function goToPage(page) {
+    currentPage = page;
+    loadQuestions();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderPagination(page, totalPages, totalCount) {
+    const container = document.getElementById('pagination');
+    if (!container) return;
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const buttons = [];
+    const btnBase = 'w-9 h-9 rounded-full text-sm font-bold transition-all flex items-center justify-center';
+    const btnActive = `${btnBase} bg-gradient-to-r from-pastel-orange to-pastel-coral text-white shadow`;
+    const btnNormal = `${btnBase} bg-white border-2 border-[#FFD0A0] text-txt-light hover:border-pastel-orange hover:text-pastel-orange`;
+    const btnDisabled = `${btnBase} bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200`;
+
+    buttons.push(`<button class="${page === 1 ? btnDisabled : btnNormal}" ${page === 1 ? 'disabled' : `onclick="goToPage(${page - 1})"`}>&lsaquo;</button>`);
+
+    let start = Math.max(1, page - 2);
+    let end = Math.min(totalPages, start + 4);
+    start = Math.max(1, end - 4);
+
+    if (start > 1) {
+        buttons.push(`<button class="${btnNormal}" onclick="goToPage(1)">1</button>`);
+        if (start > 2) buttons.push(`<span class="text-txt-lighter text-xs px-1">...</span>`);
+    }
+
+    for (let i = start; i <= end; i++) {
+        buttons.push(`<button class="${i === page ? btnActive : btnNormal}" ${i === page ? '' : `onclick="goToPage(${i})"`}>${i}</button>`);
+    }
+
+    if (end < totalPages) {
+        if (end < totalPages - 1) buttons.push(`<span class="text-txt-lighter text-xs px-1">...</span>`);
+        buttons.push(`<button class="${btnNormal}" onclick="goToPage(${totalPages})">${totalPages}</button>`);
+    }
+
+    buttons.push(`<button class="${page === totalPages ? btnDisabled : btnNormal}" ${page === totalPages ? 'disabled' : `onclick="goToPage(${page + 1})"`}>&rsaquo;</button>`);
+
+    container.innerHTML = `
+        <div class="flex items-center justify-center gap-1.5 mt-4 mb-2">
+            ${buttons.join('')}
+        </div>
+        <p class="text-center text-xs text-txt-lighter">${totalCount}개 중 ${(page-1)*30+1}-${Math.min(page*30, totalCount)}번째</p>
+    `;
 }
 
 // Like
@@ -464,6 +518,7 @@ function setupSortButtons() {
             btn.classList.add('active', 'bg-gradient-to-r', 'from-pastel-orange', 'to-pastel-coral', '!text-white', '!border-transparent');
             btn.classList.remove('bg-white', 'text-txt-light');
             currentSort = btn.dataset.sort;
+            currentPage = 1;
             loadQuestions();
         });
     });
@@ -479,6 +534,7 @@ function setupSortButtons() {
 function setupDateNavigation() {
     document.getElementById('prev-date').addEventListener('click', () => {
         currentDate = addDays(currentDate, -1);
+        currentPage = 1;
         updateDateDisplay();
         loadQuestions();
     });
@@ -487,6 +543,7 @@ function setupDateNavigation() {
         const today = getLocalToday();
         if (currentDate >= today) return;
         currentDate = addDays(currentDate, 1);
+        currentPage = 1;
         updateDateDisplay();
         loadQuestions();
     });
@@ -533,6 +590,7 @@ function setupPastDates() {
 
 function goToDate(dateStr) {
     currentDate = dateStr;
+    currentPage = 1;
     updateDateDisplay();
     loadQuestions();
     window.scrollTo({ top: 0, behavior: 'smooth' });
