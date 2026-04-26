@@ -424,6 +424,34 @@ async function saveTopic() {
     } catch (err) { showToast(err.message, 'error'); }
 }
 
+// DB Import
+async function importDb(input) {
+    if (!input.files.length) return;
+    if (!confirm('기존 데이터가 모두 교체됩니다. 계속하시겠습니까?')) {
+        input.value = '';
+        return;
+    }
+    const status = document.getElementById('import-status');
+    status.className = 'mt-2 text-sm font-bold text-txt-light';
+    status.textContent = '업로드 중...';
+    try {
+        const form = new FormData();
+        form.append('file', input.files[0]);
+        const res = await fetch('/api/admin/import-db', { method: 'POST', body: form });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        status.className = 'mt-2 text-sm font-bold text-pastel-green';
+        status.textContent = data.message;
+        showToast(data.message);
+        setTimeout(() => location.reload(), 1000);
+    } catch (err) {
+        status.className = 'mt-2 text-sm font-bold text-pastel-coral';
+        status.textContent = err.message;
+        showToast(err.message, 'error');
+    }
+    input.value = '';
+}
+
 // Excel Download
 function downloadExcel(type) {
     const startDate = document.getElementById('export-start').value;

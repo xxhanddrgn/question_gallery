@@ -167,6 +167,20 @@
             </div>
         </div>
 
+        <!-- DB Migration -->
+        <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
+            <h3 class="text-base font-heading font-bold mb-3">DB 데이터 관리</h3>
+            <p class="text-sm text-txt-light mb-3">다른 서버로 데이터를 옮기려면 내보내기 후 가져오기를 사용하세요.</p>
+            <div class="flex gap-2 flex-wrap">
+                <a href="/api/admin/export-db" class="px-5 py-2.5 bg-pastel-sky text-white rounded-xl text-sm font-bold hover:opacity-90 transition inline-block no-underline">DB 내보내기 (다운로드)</a>
+                <label class="px-5 py-2.5 bg-pastel-purple text-white rounded-xl text-sm font-bold hover:opacity-90 transition cursor-pointer">
+                    DB 가져오기 (업로드)
+                    <input type="file" accept=".db" onchange="importDb(this)" class="hidden">
+                </label>
+            </div>
+            <div id="import-status" class="mt-2 text-sm font-bold hidden"></div>
+        </div>
+
         <!-- Question Management -->
         <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
             <h3 class="text-base font-heading font-bold mb-3">질문 관리</h3>

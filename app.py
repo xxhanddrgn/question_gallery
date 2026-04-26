@@ -1096,6 +1096,48 @@ def export_students():
     )
 
 
+@app.route('/api/admin/export-db')
+def export_db():
+    if 'admin_id' not in session:
+        return jsonify({'error': '관리자 로그인이 필요합니다'}), 401
+    if not os.path.exists(DB_PATH):
+        return jsonify({'error': 'DB 파일이 없습니다'}), 404
+    conn = get_db()
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    conn.close()
+    return send_from_directory(
+        os.path.dirname(DB_PATH),
+        os.path.basename(DB_PATH),
+        as_attachment=True,
+        download_name='questions.db'
+    )
+
+
+@app.route('/api/admin/import-db', methods=['POST'])
+def import_db():
+    if 'admin_id' not in session:
+        return jsonify({'error': '관리자 로그인이 필요합니다'}), 401
+    if 'file' not in request.files:
+        return jsonify({'error': '파일이 없습니다'}), 400
+    file = request.files['file']
+    if not file.filename.endswith('.db'):
+        return jsonify({'error': '.db 파일만 업로드 가능합니다'}), 400
+    import tempfile, shutil
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp:
+        file.save(tmp.name)
+        try:
+            test_conn = sqlite3.connect(tmp.name)
+            test_conn.execute("SELECT count(*) FROM students")
+            test_conn.execute("SELECT count(*) FROM questions")
+            test_conn.close()
+        except Exception:
+            os.unlink(tmp.name)
+            return jsonify({'error': '유효하지 않은 DB 파일입니다'}), 400
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+        shutil.move(tmp.name, DB_PATH)
+    return jsonify({'success': True, 'message': 'DB를 성공적으로 가져왔습니다'})
+
+
 init_db()
 
 if __name__ == '__main__':
