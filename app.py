@@ -89,6 +89,14 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS teachers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            pin TEXT DEFAULT NULL,
+            pin_hash TEXT DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
             value TEXT
@@ -114,6 +122,11 @@ def init_db():
         conn.execute("SELECT extra_question_count FROM students LIMIT 1")
     except sqlite3.OperationalError:
         conn.execute("ALTER TABLE students ADD COLUMN extra_question_count INTEGER DEFAULT 0")
+
+    try:
+        conn.execute("SELECT role FROM students LIMIT 1")
+    except sqlite3.OperationalError:
+        conn.execute("ALTER TABLE students ADD COLUMN role TEXT DEFAULT 'student'")
 
     admin = conn.execute("SELECT id FROM admins WHERE username = 'admin'").fetchone()
     if not admin:
@@ -153,7 +166,7 @@ def set_setting(conn, key, value):
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'student_id' not in session and 'admin_id' not in session:
+        if 'student_id' not in session and 'admin_id' not in session and 'teacher_id' not in session:
             return jsonify({'error': '로그인이 필요합니다'}), 401
         return f(*args, **kwargs)
     return decorated
@@ -279,6 +292,79 @@ def login():
     })
 
 
+@app.route('/api/teacher/login', methods=['POST'])
+def teacher_login():
+    data = request.json
+    name = data.get('name', '').strip()
+    pin = data.get('pin', '').strip()
+
+    if not name:
+        return jsonify({'error': '이름을 입력해주세요'}), 400
+
+    conn = get_db()
+    teacher = conn.execute(
+        "SELECT id, name, pin, pin_hash FROM students WHERE name = ? AND role = 'teacher'",
+        (name,)
+    ).fetchone()
+
+    if not teacher:
+        if not pin:
+            conn.close()
+            return jsonify({'need_pin_setup': True, 'message': '처음 오셨네요! 4자리 비밀번호를 설정해주세요.'}), 200
+        if len(pin) != 4 or not pin.isdigit():
+            conn.close()
+            return jsonify({'error': '비밀번호는 숫자 4자리로 설정해주세요'}), 400
+        pin_hash = hashlib.sha256(pin.encode()).hexdigest()
+        conn.execute(
+            "INSERT INTO students (grade, class_num, student_num, name, pin, pin_hash, role) VALUES (0, 0, 0, ?, ?, ?, 'teacher')",
+            (name, pin, pin_hash)
+        )
+        conn.commit()
+        teacher = conn.execute(
+            "SELECT id, name, pin, pin_hash FROM students WHERE name = ? AND role = 'teacher'",
+            (name,)
+        ).fetchone()
+    else:
+        has_pin = teacher['pin'] is not None or teacher['pin_hash'] is not None
+        if not has_pin:
+            if not pin:
+                conn.close()
+                return jsonify({'need_pin_setup': True, 'message': '비밀번호가 아직 설정되지 않았어요. 4자리 비밀번호를 설정해주세요.'}), 200
+            if len(pin) != 4 or not pin.isdigit():
+                conn.close()
+                return jsonify({'error': '비밀번호는 숫자 4자리로 설정해주세요'}), 400
+            pin_hash = hashlib.sha256(pin.encode()).hexdigest()
+            conn.execute("UPDATE students SET pin = ?, pin_hash = ? WHERE id = ?", (pin, pin_hash, teacher['id']))
+            conn.commit()
+        else:
+            if not pin:
+                conn.close()
+                return jsonify({'need_pin': True, 'message': '비밀번호를 입력해주세요.'}), 200
+            if teacher['pin'] is not None:
+                if teacher['pin'] != pin:
+                    conn.close()
+                    return jsonify({'error': '비밀번호가 올바르지 않습니다'}), 401
+            else:
+                pin_hash = hashlib.sha256(pin.encode()).hexdigest()
+                if teacher['pin_hash'] != pin_hash:
+                    conn.close()
+                    return jsonify({'error': '비밀번호가 올바르지 않습니다'}), 401
+                conn.execute("UPDATE students SET pin = ? WHERE id = ?", (pin, teacher['id']))
+                conn.commit()
+
+    session['teacher_id'] = teacher['id']
+    session['teacher_name'] = teacher['name']
+    conn.close()
+
+    return jsonify({
+        'success': True,
+        'teacher': {
+            'id': teacher['id'],
+            'name': teacher['name']
+        }
+    })
+
+
 @app.route('/api/logout', methods=['POST'])
 def logout():
     session.clear()
@@ -291,6 +377,7 @@ def me():
         return jsonify({
             'logged_in': True,
             'is_admin': True,
+            'role': 'admin',
             'student': {
                 'id': 0,
                 'grade': 0,
@@ -299,11 +386,22 @@ def me():
                 'name': '관리자'
             }
         })
+    if 'teacher_id' in session:
+        return jsonify({
+            'logged_in': True,
+            'is_admin': False,
+            'role': 'teacher',
+            'teacher': {
+                'id': session['teacher_id'],
+                'name': session['teacher_name']
+            }
+        })
     if 'student_id' not in session:
         return jsonify({'logged_in': False})
     return jsonify({
         'logged_in': True,
         'is_admin': False,
+        'role': 'student',
         'student': {
             'id': session['student_id'],
             'grade': session['student_grade'],
@@ -328,7 +426,8 @@ def get_questions():
 
     conn = get_db()
     is_admin = 'admin_id' in session and session.get('admin_student_mode')
-    student_id = 0 if is_admin else session.get('student_id', 0)
+    is_teacher = 'teacher_id' in session
+    student_id = 0 if (is_admin or is_teacher) else session.get('student_id', 0)
 
     if sort == 'likes':
         order = 'like_count DESC, q.created_at DESC'
@@ -362,6 +461,7 @@ def get_questions():
     questions = conn.execute(f'''
         SELECT q.id, q.content, q.created_at, q.created_date, q.student_id,
                s.grade, s.class_num, s.student_num, s.name,
+               COALESCE(s.role, 'student') as role,
                COUNT(DISTINCT l.id) as like_count,
                MAX(CASE WHEN l.student_id = ? THEN 1 ELSE 0 END) as liked_by_me
         FROM questions q
@@ -376,26 +476,32 @@ def get_questions():
     result = []
     for q in questions:
         is_mine = False
-        if not is_admin:
+        if not is_admin and not is_teacher:
             is_mine = (q['student_num'] == session.get('student_num') and
                        q['grade'] == session.get('student_grade') and
                        q['class_num'] == session.get('student_class'))
+        author_role = q['role'] if q['role'] else 'student'
+        if author_role == 'teacher':
+            author = f"{q['name']} 선생님"
+        else:
+            author = f"{q['grade']}-{q['class_num']} {q['name']}"
         result.append({
             'id': q['id'],
             'content': q['content'],
             'created_at': q['created_at'],
             'created_date': q['created_date'],
-            'author': f"{q['grade']}-{q['class_num']} {q['name']}",
+            'author': author,
             'grade': q['grade'],
             'class_num': q['class_num'],
+            'author_role': author_role,
             'like_count': q['like_count'],
-            'liked_by_me': bool(q['liked_by_me']),
+            'liked_by_me': bool(q['liked_by_me']) if not is_teacher else False,
             'is_mine': is_mine,
-            'can_edit': is_mine or is_admin,  # Feature 3: admin can edit/delete
+            'can_edit': is_mine or is_admin,
         })
 
     today_question = None
-    if not is_admin:
+    if not is_admin and not is_teacher:
         today_question = conn.execute(
             "SELECT id FROM questions WHERE student_id = ? AND created_date = ? AND is_deleted = 0",
             (student_id, kst_today())
@@ -404,19 +510,22 @@ def get_questions():
     conn.close()
     return jsonify({
         'questions': result,
-        'already_posted_today': today_question is not None if not is_admin else True,
+        'already_posted_today': today_question is not None if (not is_admin and not is_teacher) else True,
         'date': target_date,
         'total_count': total_count,
         'page': page,
         'total_pages': total_pages,
         'per_page': per_page,
         'is_admin': is_admin,
+        'is_teacher': is_teacher,
     })
 
 
 @app.route('/api/questions', methods=['POST'])
 @login_required
 def create_question():
+    if 'teacher_id' in session:
+        return jsonify({'error': '교직원 계정으로는 질문을 작성할 수 없습니다'}), 400
     if 'admin_id' in session and session.get('admin_student_mode'):
         return jsonify({'error': '관리자 모드에서는 질문을 작성할 수 없습니다'}), 400
 
@@ -515,6 +624,8 @@ def delete_question(question_id):
 @app.route('/api/questions/<int:question_id>/like', methods=['POST'])
 @login_required
 def toggle_like(question_id):
+    if 'teacher_id' in session:
+        return jsonify({'error': '교직원 계정으로는 좋아요를 할 수 없습니다'}), 400
     if 'admin_id' in session and session.get('admin_student_mode'):
         return jsonify({'error': '관리자 모드에서는 좋아요를 할 수 없습니다'}), 400
 
@@ -639,6 +750,7 @@ def admin_get_questions():
     questions = conn.execute('''
         SELECT q.id, q.content, q.created_at, q.created_date, q.is_deleted,
                s.grade, s.class_num, s.student_num, s.name,
+               COALESCE(s.role, 'student') as role,
                COUNT(DISTINCT l.id) as like_count
         FROM questions q
         JOIN students s ON q.student_id = s.id
@@ -654,7 +766,7 @@ def admin_get_questions():
             'id': q['id'],
             'content': q['content'],
             'created_at': q['created_at'],
-            'author': f"{q['grade']}-{q['class_num']} {q['name']} ({q['student_num']}번)",
+            'author': f"{q['name']} 선생님" if q['role'] == 'teacher' else f"{q['grade']}-{q['class_num']} {q['name']} ({q['student_num']}번)",
             'like_count': q['like_count'],
             'is_deleted': bool(q['is_deleted'])
         } for q in questions],
@@ -884,9 +996,10 @@ def admin_get_students():
     students = conn.execute('''
         SELECT id, grade, class_num, student_num, name, pin, pin_hash,
                COALESCE(extra_question_count, 0) as extra_question_count,
+               COALESCE(role, 'student') as role,
                (SELECT COUNT(*) FROM questions WHERE student_id = students.id AND is_deleted = 0) as question_count
         FROM students
-        ORDER BY grade, class_num, student_num
+        ORDER BY role ASC, grade, class_num, student_num
     ''').fetchall()
     conn.close()
     return jsonify({
@@ -896,6 +1009,7 @@ def admin_get_students():
             'class_num': s['class_num'],
             'student_num': s['student_num'],
             'name': s['name'],
+            'role': s['role'],
             'pin': s['pin'] if s['pin'] else None,
             'has_pin': s['pin'] is not None or s['pin_hash'] is not None,
             'pin_viewable': s['pin'] is not None,
@@ -998,6 +1112,57 @@ def admin_update_question_count(student_id):
     })
 
 
+@app.route('/api/admin/students/<int:student_id>/change-role', methods=['POST'])
+@admin_required
+def admin_change_role(student_id):
+    data = request.json
+    new_role = data.get('role', '').strip()
+    if new_role not in ('student', 'teacher'):
+        return jsonify({'error': '유효하지 않은 소속입니다'}), 400
+
+    grade = data.get('grade')
+    class_num = data.get('class_num')
+    student_num = data.get('student_num')
+
+    conn = get_db()
+    user = conn.execute("SELECT id, name, role, grade, class_num, student_num FROM students WHERE id = ?", (student_id,)).fetchone()
+    if not user:
+        conn.close()
+        return jsonify({'error': '사용자를 찾을 수 없습니다'}), 404
+
+    current_role = user['role'] or 'student'
+    if current_role == new_role:
+        conn.close()
+        return jsonify({'error': f'이미 {"교직원" if new_role == "teacher" else "학생"}입니다'}), 400
+
+    if new_role == 'teacher':
+        conn.execute(
+            "UPDATE students SET role = 'teacher', grade = 0, class_num = 0, student_num = 0 WHERE id = ?",
+            (student_id,)
+        )
+        msg = f"'{user['name']}'님이 교직원으로 변경되었습니다."
+    else:
+        if not grade or not class_num or not student_num:
+            conn.close()
+            return jsonify({'error': '학생으로 변경하려면 학년, 반, 번호를 입력해주세요'}), 400
+        try:
+            grade = int(grade)
+            class_num = int(class_num)
+            student_num = int(student_num)
+        except (ValueError, TypeError):
+            conn.close()
+            return jsonify({'error': '학년, 반, 번호는 숫자로 입력해주세요'}), 400
+        conn.execute(
+            "UPDATE students SET role = 'student', grade = ?, class_num = ?, student_num = ? WHERE id = ?",
+            (grade, class_num, student_num, student_id)
+        )
+        msg = f"'{user['name']}'님이 {grade}-{class_num} {student_num}번 학생으로 변경되었습니다."
+
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True, 'message': msg})
+
+
 # -- Admin Reset Hall of Fame --
 
 @app.route('/api/admin/reset-hall', methods=['POST'])
@@ -1052,13 +1217,15 @@ def admin_set_topic():
 @login_required
 def hall_of_fame():
     is_admin = 'admin_id' in session and session.get('admin_student_mode')
-    student_id = 0 if is_admin else session.get('student_id', 0)
+    is_teacher = 'teacher_id' in session
+    student_id = 0 if (is_admin or is_teacher) else session.get('student_id', 0)
     conn = get_db()
 
     hall_reset_date = get_setting(conn, 'hall_reset_date', '2000-01-01')
 
     ranking = conn.execute('''
         SELECT s.id, s.grade, s.class_num, s.student_num, s.name,
+               COALESCE(s.role, 'student') as role,
                COUNT(q.id) + COALESCE(s.extra_question_count, 0) as question_count
         FROM students s
         JOIN questions q ON s.id = q.student_id AND q.is_deleted = 0
@@ -1078,6 +1245,7 @@ def hall_of_fame():
             'grade': r['grade'],
             'class_num': r['class_num'],
             'name': r['name'],
+            'role': r['role'],
             'question_count': r['question_count'],
             'is_me': r['id'] == student_id,
             'rank': rank

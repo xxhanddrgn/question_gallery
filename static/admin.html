@@ -113,7 +113,7 @@
 
         <!-- PIN Management -->
         <div class="bg-white rounded-2xl shadow-md p-5 mb-4 border border-[#FFE8CC]/30">
-            <h3 class="text-base font-heading font-bold mb-3">학생 비밀번호 관리</h3>
+            <h3 class="text-base font-heading font-bold mb-3">사용자 관리</h3>
             <div class="flex gap-2 mb-3">
                 <button onclick="generatePins('no_pin')" class="px-4 py-2 bg-pastel-sky text-white rounded-xl text-sm font-bold hover:opacity-90 transition">미설정 학생 PIN 생성</button>
                 <button onclick="generatePins('all')" class="px-4 py-2 bg-pastel-purple text-white rounded-xl text-sm font-bold hover:opacity-90 transition">전체 PIN 재생성</button>
@@ -133,6 +133,11 @@
 
             <!-- Student Filters -->
             <div class="flex gap-2 mb-3">
+                <select id="filter-role" class="px-3 py-2 border-2 border-[#FFE0B2] rounded-xl text-sm font-body bg-white focus:outline-none focus:border-pastel-orange transition">
+                    <option value="">전체</option>
+                    <option value="student">학생</option>
+                    <option value="teacher">교직원</option>
+                </select>
                 <select id="filter-grade" class="px-3 py-2 border-2 border-[#FFE0B2] rounded-xl text-sm font-body bg-white focus:outline-none focus:border-pastel-orange transition">
                     <option value="">전체 학년</option>
                     <option value="1">1학년</option>

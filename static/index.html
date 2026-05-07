@@ -49,32 +49,50 @@
                 </div>
             </div>
             <form id="login-form" class="w-full max-w-[400px] bg-white p-7 rounded-2xl shadow-lg border-2 border-[#FFE0B2]">
-                <div class="grid grid-cols-3 gap-3 mb-4">
-                    <div>
-                        <label for="grade" class="block text-sm font-bold text-txt-light mb-1.5">학년</label>
-                        <select id="grade" required class="w-full px-3 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
-                            <option value="">선택</option>
-                            <option value="1">1학년</option>
-                            <option value="2">2학년</option>
-                            <option value="3">3학년</option>
-                            <option value="4">4학년</option>
-                            <option value="5">5학년</option>
-                            <option value="6">6학년</option>
-                        </select>
+                <!-- Role Toggle -->
+                <div class="flex mb-5 bg-cream rounded-xl p-1">
+                    <button type="button" id="role-student-btn" class="flex-1 py-2.5 text-sm font-heading font-bold rounded-lg transition-all bg-gradient-to-r from-pastel-orange to-pastel-coral text-white shadow" onclick="switchRole('student')">학생</button>
+                    <button type="button" id="role-teacher-btn" class="flex-1 py-2.5 text-sm font-heading font-bold rounded-lg transition-all text-txt-light hover:text-txt" onclick="switchRole('teacher')">교직원</button>
+                </div>
+
+                <!-- Student Fields -->
+                <div id="student-fields">
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div>
+                            <label for="grade" class="block text-sm font-bold text-txt-light mb-1.5">학년</label>
+                            <select id="grade" required class="w-full px-3 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+                                <option value="">선택</option>
+                                <option value="1">1학년</option>
+                                <option value="2">2학년</option>
+                                <option value="3">3학년</option>
+                                <option value="4">4학년</option>
+                                <option value="5">5학년</option>
+                                <option value="6">6학년</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="class_num" class="block text-sm font-bold text-txt-light mb-1.5">반</label>
+                            <input type="number" id="class_num" min="1" max="20" placeholder="반" required class="w-full px-3 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+                        </div>
+                        <div>
+                            <label for="student_num" class="block text-sm font-bold text-txt-light mb-1.5">번호</label>
+                            <input type="number" id="student_num" min="1" max="50" placeholder="번호" required class="w-full px-3 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+                        </div>
                     </div>
-                    <div>
-                        <label for="class_num" class="block text-sm font-bold text-txt-light mb-1.5">반</label>
-                        <input type="number" id="class_num" min="1" max="20" placeholder="반" required class="w-full px-3 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
-                    </div>
-                    <div>
-                        <label for="student_num" class="block text-sm font-bold text-txt-light mb-1.5">번호</label>
-                        <input type="number" id="student_num" min="1" max="50" placeholder="번호" required class="w-full px-3 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+                    <div class="mb-4">
+                        <label for="name" class="block text-sm font-bold text-txt-light mb-1.5">이름</label>
+                        <input type="text" id="name" placeholder="이름을 입력하세요" required maxlength="10" class="w-full px-3.5 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
                     </div>
                 </div>
-                <div class="mb-4">
-                    <label for="name" class="block text-sm font-bold text-txt-light mb-1.5">이름</label>
-                    <input type="text" id="name" placeholder="이름을 입력하세요" required maxlength="10" class="w-full px-3.5 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+
+                <!-- Teacher Fields -->
+                <div id="teacher-fields" style="display:none">
+                    <div class="mb-4">
+                        <label for="teacher-name" class="block text-sm font-bold text-txt-light mb-1.5">이름</label>
+                        <input type="text" id="teacher-name" placeholder="이름을 입력하세요" maxlength="10" class="w-full px-3.5 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
+                    </div>
                 </div>
+
                 <div id="pin-section" class="mb-4" style="display:none">
                     <label id="pin-label" for="pin" class="block text-sm font-bold text-txt-light mb-1.5">비밀번호 (숫자 4자리)</label>
                     <input type="password" id="pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="숫자 4자리 입력" class="w-full px-3.5 py-3 border-2 border-[#FFE0B2] rounded-xl text-base font-body bg-[#FFFBF5] focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition">
@@ -93,7 +111,7 @@
         <!-- Header -->
         <header class="bg-gradient-to-r from-[#E08A50] to-[#D87070] sticky top-0 z-50 shadow-md">
             <div class="max-w-[600px] mx-auto px-4 py-3 flex items-center justify-between">
-                <h1 class="font-heading text-lg text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">하루 한 개 질문</h1>
+                <h1 class="font-heading text-lg text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">하루 한 개 질문 챌린지</h1>
                 <div class="flex items-center gap-2">
                     <span id="user-info" class="text-xs bg-white/30 px-2.5 py-1 rounded-full font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]"></span>
                     <button id="home-btn" class="text-xs px-2.5 py-1 rounded-lg bg-white/30 border border-white/50 text-white font-bold whitespace-nowrap hover:bg-white/45 transition drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]">홈</button>

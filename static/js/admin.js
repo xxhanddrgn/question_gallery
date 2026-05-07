@@ -266,6 +266,7 @@ async function resetHallOfFame() {
 let allStudents = [];
 
 function setupStudentFilters() {
+    document.getElementById('filter-role').addEventListener('change', renderStudents);
     document.getElementById('filter-grade').addEventListener('change', renderStudents);
     document.getElementById('filter-name').addEventListener('input', renderStudents);
 }
@@ -279,11 +280,13 @@ async function loadStudents() {
 }
 
 function renderStudents() {
+    const roleFilter = document.getElementById('filter-role').value;
     const gradeFilter = document.getElementById('filter-grade').value;
     const nameFilter = document.getElementById('filter-name').value.trim().toLowerCase();
     const list = document.getElementById('student-list');
 
     let filtered = allStudents;
+    if (roleFilter) filtered = filtered.filter(s => (s.role || 'student') === roleFilter);
     if (gradeFilter) filtered = filtered.filter(s => s.grade == gradeFilter);
     if (nameFilter) filtered = filtered.filter(s => s.name.toLowerCase().includes(nameFilter));
 
@@ -309,16 +312,28 @@ function renderStudents() {
             qDisplay += ` <span class="text-pastel-purple">(실제 ${s.question_count} ${extraQ > 0 ? '+' : ''}${extraQ})</span>`;
         }
 
+        const isTeacher = s.role === 'teacher';
+        const roleBadge = isTeacher
+            ? '<span class="text-[10px] font-bold bg-pastel-sky text-white px-1.5 py-0.5 rounded ml-1">교직원</span>'
+            : '<span class="text-[10px] font-bold bg-pastel-green text-white px-1.5 py-0.5 rounded ml-1">학생</span>';
+        const roleToggleLabel = isTeacher ? '학생으로' : '교직원으로';
+        const nameDisplay = isTeacher
+            ? `${escapeHtml(s.name)} 선생님`
+            : `${s.grade}-${s.class_num} ${escapeHtml(s.name)} (${s.student_num}번)`;
+        const avatarClass = isTeacher ? 'bg-pastel-sky' : `grade-${s.grade}`;
+        const avatarText = isTeacher ? 'T' : s.grade;
+
         return `
         <div class="flex items-center gap-3 px-3 py-3 rounded-xl border-b border-[#F5EDE5] last:border-b-0 hover:bg-cream transition">
             <input type="checkbox" class="student-checkbox w-4 h-4 cursor-pointer flex-shrink-0" value="${s.id}" onchange="updatePinSelectedCount()">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 grade-${s.grade}">
-                ${s.grade}
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ${avatarClass}">
+                ${avatarText}
             </div>
             <div class="flex-1 min-w-0">
                 <div class="text-sm font-bold">
-                    ${s.grade}-${s.class_num} ${escapeHtml(s.name)} (${s.student_num}번)
+                    ${nameDisplay}${roleBadge}
                     <button class="bg-pastel-sky text-white border-none px-1.5 py-0.5 rounded text-[10px] font-bold font-body cursor-pointer ml-1 hover:opacity-80" onclick="renameStudent(${s.id}, '${escapeHtml(s.name).replace(/'/g, "\\'")}')">이름수정</button>
+                    <button class="bg-[#A0A0A0] text-white border-none px-1.5 py-0.5 rounded text-[10px] font-bold font-body cursor-pointer ml-0.5 hover:opacity-80" onclick="changeRole(${s.id}, '${escapeHtml(s.name).replace(/'/g, "\\'")}', '${s.role}')">${roleToggleLabel}</button>
                 </div>
                 <div class="text-xs text-txt-light">
                     ${qDisplay}
@@ -327,8 +342,8 @@ function renderStudents() {
                 </div>
             </div>
             <div class="flex gap-1">
-                ${s.has_pin ? `<button class="bg-pastel-orange text-white border-none px-2 py-1.5 rounded-lg text-xs font-bold font-body cursor-pointer whitespace-nowrap" onclick="resetStudentPin(${s.id}, '${s.grade}-${s.class_num} ${escapeHtml(s.name)}')">PIN 초기화</button>` : ''}
-                <button class="bg-red-400 text-white border-none px-2 py-1.5 rounded-lg text-xs font-bold font-body cursor-pointer whitespace-nowrap" onclick="deleteStudent(${s.id}, '${s.grade}-${s.class_num} ${escapeHtml(s.name)}')">삭제</button>
+                ${s.has_pin ? `<button class="bg-pastel-orange text-white border-none px-2 py-1.5 rounded-lg text-xs font-bold font-body cursor-pointer whitespace-nowrap" onclick="resetStudentPin(${s.id}, '${nameDisplay}')">PIN 초기화</button>` : ''}
+                <button class="bg-red-400 text-white border-none px-2 py-1.5 rounded-lg text-xs font-bold font-body cursor-pointer whitespace-nowrap" onclick="deleteStudent(${s.id}, '${nameDisplay}')">삭제</button>
             </div>
         </div>`;
     }).join('');
@@ -374,6 +389,36 @@ async function editQuestionCount(studentId, studentName, currentCount) {
         const data = await api(`/api/admin/students/${studentId}/update-question-count`, {
             method: 'POST',
             body: JSON.stringify({ question_count: count }),
+        });
+        showToast(data.message);
+        loadStudents();
+        loadStats();
+    } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function changeRole(studentId, name, currentRole) {
+    const newRole = currentRole === 'teacher' ? 'student' : 'teacher';
+    const body = { role: newRole };
+
+    if (newRole === 'teacher') {
+        if (!confirm(`'${name}'님을 교직원으로 변경할까요?\n질문에 표시되는 정보가 '선생님'으로 바뀝니다.`)) return;
+    } else {
+        const info = prompt(`'${name}'님을 학생으로 변경합니다.\n학년, 반, 번호를 입력하세요.\n(예: 3,2,15)`, '');
+        if (!info) return;
+        const parts = info.split(',').map(s => s.trim());
+        if (parts.length !== 3 || parts.some(p => !p || isNaN(p))) {
+            showToast('학년, 반, 번호를 쉼표로 구분하여 입력해주세요 (예: 3,2,15)', 'error');
+            return;
+        }
+        body.grade = parseInt(parts[0]);
+        body.class_num = parseInt(parts[1]);
+        body.student_num = parseInt(parts[2]);
+    }
+
+    try {
+        const data = await api(`/api/admin/students/${studentId}/change-role`, {
+            method: 'POST',
+            body: JSON.stringify(body),
         });
         showToast(data.message);
         loadStudents();

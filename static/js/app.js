@@ -1,9 +1,11 @@
 // State
 let currentDate = getLocalToday();
 let currentSort = 'latest';
-let currentGradeFilter = '';  // Feature 1: grade filter
+let currentGradeFilter = '';
 let currentPage = 1;
-let isAdminMode = false;  // Feature 3: admin mode
+let isAdminMode = false;
+let isTeacherMode = false;
+let currentRole = 'student';
 
 // Helpers
 function getLocalToday() {
@@ -68,7 +70,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await api('/api/me');
         if (data.logged_in) {
             isAdminMode = !!data.is_admin;
-            showMainScreen(data.student);
+            isTeacherMode = data.role === 'teacher';
+            if (isTeacherMode) {
+                showMainScreen(data.teacher, 'teacher');
+            } else {
+                showMainScreen(data.student);
+            }
         }
     } catch (e) {}
 
@@ -101,9 +108,49 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Login
 let loginStep = 'info';
 
+function switchRole(role) {
+    currentRole = role;
+    loginStep = 'info';
+    document.getElementById('pin-section').style.display = 'none';
+    document.getElementById('pin').value = '';
+
+    const studentBtn = document.getElementById('role-student-btn');
+    const teacherBtn = document.getElementById('role-teacher-btn');
+    const studentFields = document.getElementById('student-fields');
+    const teacherFields = document.getElementById('teacher-fields');
+
+    if (role === 'student') {
+        studentBtn.className = 'flex-1 py-2.5 text-sm font-heading font-bold rounded-lg transition-all bg-gradient-to-r from-pastel-orange to-pastel-coral text-white shadow';
+        teacherBtn.className = 'flex-1 py-2.5 text-sm font-heading font-bold rounded-lg transition-all text-txt-light hover:text-txt';
+        studentFields.style.display = 'block';
+        teacherFields.style.display = 'none';
+        document.getElementById('grade').required = true;
+        document.getElementById('class_num').required = true;
+        document.getElementById('student_num').required = true;
+        document.getElementById('name').required = true;
+    } else {
+        teacherBtn.className = 'flex-1 py-2.5 text-sm font-heading font-bold rounded-lg transition-all bg-gradient-to-r from-pastel-sky to-pastel-purple text-white shadow';
+        studentBtn.className = 'flex-1 py-2.5 text-sm font-heading font-bold rounded-lg transition-all text-txt-light hover:text-txt';
+        studentFields.style.display = 'none';
+        teacherFields.style.display = 'block';
+        document.getElementById('grade').required = false;
+        document.getElementById('class_num').required = false;
+        document.getElementById('student_num').required = false;
+        document.getElementById('name').required = false;
+    }
+
+    document.getElementById('login-btn').textContent = '다음';
+}
+
 function setupLoginForm() {
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        if (currentRole === 'teacher') {
+            await handleTeacherLogin();
+            return;
+        }
+
         const grade = document.getElementById('grade').value;
         const class_num = document.getElementById('class_num').value;
         const student_num = document.getElementById('student_num').value;
@@ -159,6 +206,7 @@ function setupLoginForm() {
                 showToast(`${name}님, 환영합니다!`);
                 resetLoginForm();
                 isAdminMode = false;
+                isTeacherMode = false;
                 showMainScreen(data.student);
             }
         } catch (err) {
@@ -171,29 +219,103 @@ function setupLoginForm() {
     });
 }
 
+async function handleTeacherLogin() {
+    const name = document.getElementById('teacher-name').value.trim();
+    const pin = document.getElementById('pin').value.trim();
+
+    if (!name) {
+        showToast('이름을 입력해주세요', 'error');
+        return;
+    }
+
+    if (loginStep !== 'info' && !pin) {
+        showToast('비밀번호(4자리 숫자)를 입력해주세요', 'error');
+        document.getElementById('pin').focus();
+        return;
+    }
+
+    if (loginStep !== 'info' && (pin.length !== 4 || !/^\d{4}$/.test(pin))) {
+        showToast('비밀번호는 4자리 숫자여야 합니다', 'error');
+        return;
+    }
+
+    try {
+        const body = { name };
+        if (pin) body.pin = pin;
+
+        const res = await fetch('/api/teacher/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        const data = await res.json();
+
+        if (data.need_pin_setup) {
+            loginStep = 'pin_setup';
+            showPinSection('비밀번호 설정 (4자리 숫자)', '향후 로그인할 때 사용할 비밀번호를 설정하세요.', '설정하기');
+            document.getElementById('pin').focus();
+            return;
+        }
+
+        if (data.need_pin) {
+            loginStep = 'pin_enter';
+            showPinSection('비밀번호 (4자리 숫자)', '비밀번호를 입력하세요', '로그인');
+            document.getElementById('pin').focus();
+            return;
+        }
+
+        if (!res.ok) {
+            throw new Error(data.error || 'API 요청 중 오류가 발생했습니다');
+        }
+
+        if (data.success) {
+            showToast(`${name} 선생님, 환영합니다!`);
+            resetLoginForm();
+            isAdminMode = false;
+            isTeacherMode = true;
+            showMainScreen(data.teacher, 'teacher');
+        }
+    } catch (err) {
+        showToast(err.message, 'error');
+        if (loginStep === 'pin_enter') {
+            document.getElementById('pin').value = '';
+            document.getElementById('pin').focus();
+        }
+    }
+}
+
 function showPinSection(label, hint, btnText) {
     document.getElementById('pin-section').style.display = 'block';
     document.getElementById('pin-label').textContent = label;
     document.getElementById('pin-hint').textContent = hint;
     document.getElementById('login-btn').textContent = btnText;
-    document.getElementById('grade').disabled = true;
-    document.getElementById('class_num').readOnly = true;
-    document.getElementById('student_num').readOnly = true;
-    document.getElementById('name').readOnly = true;
+    if (currentRole === 'student') {
+        document.getElementById('grade').disabled = true;
+        document.getElementById('class_num').readOnly = true;
+        document.getElementById('student_num').readOnly = true;
+        document.getElementById('name').readOnly = true;
+    } else {
+        document.getElementById('teacher-name').readOnly = true;
+    }
+    document.getElementById('role-student-btn').disabled = true;
+    document.getElementById('role-teacher-btn').disabled = true;
 }
 
 function resetLoginForm() {
     loginStep = 'info';
     document.getElementById('pin-section').style.display = 'none';
     document.getElementById('pin').value = '';
-    document.getElementById('login-btn').textContent = '로그인';
+    document.getElementById('login-btn').textContent = '다음';
     document.getElementById('grade').disabled = false;
     document.getElementById('class_num').readOnly = false;
     document.getElementById('student_num').readOnly = false;
     document.getElementById('name').readOnly = false;
+    document.getElementById('teacher-name').readOnly = false;
+    document.getElementById('role-student-btn').disabled = false;
+    document.getElementById('role-teacher-btn').disabled = false;
 }
 
-function showMainScreen(student) {
+function showMainScreen(user, role = 'student') {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'block';
 
@@ -201,9 +323,13 @@ function showMainScreen(student) {
         document.getElementById('user-info').textContent = '관리자';
         document.getElementById('admin-mode-banner').style.display = 'block';
         document.getElementById('question-form-container').style.display = 'none';
+    } else if (role === 'teacher' || isTeacherMode) {
+        document.getElementById('user-info').textContent = `${user.name} 선생님`;
+        document.getElementById('admin-mode-banner').style.display = 'none';
+        document.getElementById('question-form-container').style.display = 'none';
     } else {
         document.getElementById('user-info').textContent =
-            `${student.grade}-${student.class_num} ${student.name}`;
+            `${user.grade}-${user.class_num} ${user.name}`;
         document.getElementById('admin-mode-banner').style.display = 'none';
     }
 
@@ -268,11 +394,14 @@ function setupLogout() {
     document.getElementById('logout-btn').addEventListener('click', async () => {
         await api('/api/logout', { method: 'POST' });
         isAdminMode = false;
+        isTeacherMode = false;
+        currentRole = 'student';
         document.getElementById('main-screen').style.display = 'none';
         document.getElementById('admin-mode-banner').style.display = 'none';
         document.getElementById('login-screen').style.display = 'block';
         document.getElementById('login-form').reset();
         resetLoginForm();
+        switchRole('student');
     });
 }
 
@@ -360,7 +489,7 @@ async function loadQuestions() {
         const alreadyPosted = document.getElementById('already-posted');
         const today = isToday(currentDate);
 
-        if (isAdminMode) {
+        if (isAdminMode || isTeacherMode) {
             formContainer.style.display = 'none';
             alreadyPosted.style.display = 'none';
         } else if (!today) {
@@ -389,12 +518,15 @@ async function loadQuestions() {
         empty.style.display = 'none';
         list.innerHTML = data.questions.map((q, i) => {
             const canEdit = q.can_edit || q.is_mine;
+            const isAuthorTeacher = q.author_role === 'teacher';
+            const avatarClass = isAuthorTeacher ? 'bg-pastel-sky' : `grade-${q.grade}`;
+            const avatarText = isAuthorTeacher ? 'T' : q.grade;
             return `
             <div class="bg-white rounded-2xl shadow-md p-4 transition-all hover:shadow-lg border border-[#FFE8CC]/30 animate-slideUp ${q.is_mine ? 'border-l-4 border-l-pastel-orange bg-cream' : ''} ${isAdminMode && !q.is_mine ? 'border-l-4 border-l-red-300' : ''}" style="animation-delay: ${i * 0.05}s" id="question-card-${q.id}">
                 <div class="flex items-center justify-between mb-2.5">
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white grade-${q.grade}">
-                            ${q.grade}
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${avatarClass}">
+                            ${avatarText}
                         </div>
                         <div class="flex flex-col">
                             <span class="text-sm font-bold">${escapeHtml(q.author)}</span>
@@ -413,7 +545,7 @@ async function loadQuestions() {
                         ${q.liked_by_me
                             ? 'border-pastel-coral text-pastel-coral bg-red-50'
                             : 'border-[#FFD0A0] text-txt-light bg-white hover:border-pastel-coral hover:text-pastel-coral hover:bg-red-50'}"
-                        onclick="toggleLike(${q.id}, this)" ${isAdminMode ? 'disabled' : ''}>
+                        onclick="toggleLike(${q.id}, this)" ${(isAdminMode || isTeacherMode) ? 'disabled' : ''}>
                         <span class="heart text-base transition-transform ${q.liked_by_me ? 'text-pastel-coral' : 'text-txt-lighter'}">&#9829;</span>
                         <span class="like-count">${q.like_count}</span>
                     </button>
@@ -486,7 +618,7 @@ function renderPagination(page, totalPages, totalCount) {
 
 // Like
 async function toggleLike(questionId, btn) {
-    if (isAdminMode) return;
+    if (isAdminMode || isTeacherMode) return;
     try {
         const data = await api(`/api/questions/${questionId}/like`, { method: 'POST' });
         const heart = btn.querySelector('.heart');
