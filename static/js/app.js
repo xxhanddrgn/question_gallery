@@ -664,23 +664,37 @@ function renderPagination(page, totalPages, totalCount) {
 // Like
 async function toggleLike(questionId, btn) {
     if (isAdminMode || isTeacherMode) return;
+    if (btn.dataset.busy === '1') return;
+    btn.dataset.busy = '1';
+
+    const heart = btn.querySelector('.heart');
+    const count = btn.querySelector('.like-count');
+    const wasLiked = btn.className.includes('border-pastel-coral');
+    const oldCount = parseInt(count.textContent, 10) || 0;
+
+    const likedClasses = 'like-btn inline-flex items-center gap-1.5 px-4 py-1.5 border-2 rounded-full text-sm font-semibold cursor-pointer transition-all border-pastel-coral text-pastel-coral bg-red-50';
+    const unlikedClasses = 'like-btn inline-flex items-center gap-1.5 px-4 py-1.5 border-2 rounded-full text-sm font-semibold cursor-pointer transition-all border-[#FFD0A0] text-txt-light bg-white hover:border-pastel-coral hover:text-pastel-coral hover:bg-red-50';
+    const likedHeartClasses = 'heart text-base transition-transform text-pastel-coral animate-heartPop';
+    const unlikedHeartClasses = 'heart text-base transition-transform text-txt-lighter';
+
+    const willLike = !wasLiked;
+    btn.className = willLike ? likedClasses : unlikedClasses;
+    heart.className = willLike ? likedHeartClasses : unlikedHeartClasses;
+    heart.textContent = '\u2665';
+    count.textContent = Math.max(0, willLike ? oldCount + 1 : oldCount - 1);
+
     try {
         const data = await api(`/api/questions/${questionId}/like`, { method: 'POST' });
-        const heart = btn.querySelector('.heart');
-        const count = btn.querySelector('.like-count');
-
-        if (data.liked) {
-            btn.className = 'like-btn inline-flex items-center gap-1.5 px-4 py-1.5 border-2 rounded-full text-sm font-semibold cursor-pointer transition-all border-pastel-coral text-pastel-coral bg-red-50';
-            heart.textContent = '\u2665';
-            heart.className = 'heart text-base transition-transform text-pastel-coral animate-heartPop';
-        } else {
-            btn.className = 'like-btn inline-flex items-center gap-1.5 px-4 py-1.5 border-2 rounded-full text-sm font-semibold cursor-pointer transition-all border-[#FFD0A0] text-txt-light bg-white hover:border-pastel-coral hover:text-pastel-coral hover:bg-red-50';
-            heart.textContent = '\u2665';
-            heart.className = 'heart text-base transition-transform text-txt-lighter';
-        }
+        btn.className = data.liked ? likedClasses : unlikedClasses;
+        heart.className = data.liked ? likedHeartClasses : unlikedHeartClasses;
         count.textContent = data.like_count;
     } catch (err) {
+        btn.className = wasLiked ? likedClasses : unlikedClasses;
+        heart.className = wasLiked ? likedHeartClasses : unlikedHeartClasses;
+        count.textContent = oldCount;
         showToast(err.message, 'error');
+    } finally {
+        btn.dataset.busy = '';
     }
 }
 
