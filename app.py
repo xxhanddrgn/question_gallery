@@ -429,6 +429,7 @@ def get_questions():
     is_admin = 'admin_id' in session and session.get('admin_student_mode')
     is_teacher = 'teacher_id' in session
     student_id = 0 if (is_admin or is_teacher) else session.get('student_id', 0)
+    author_id = session.get('teacher_id') if is_teacher else session.get('student_id', 0)
 
     if sort == 'likes':
         order = 'like_count DESC, q.created_at DESC'
@@ -489,7 +490,9 @@ def get_questions():
     result = []
     for q in questions:
         is_mine = False
-        if not is_admin and not is_teacher:
+        if is_teacher:
+            is_mine = (q['student_id'] == author_id)
+        elif not is_admin:
             is_mine = (q['student_num'] == session.get('student_num') and
                        q['grade'] == session.get('student_grade') and
                        q['class_num'] == session.get('student_class'))
@@ -514,16 +517,16 @@ def get_questions():
         })
 
     today_question = None
-    if not is_admin and not is_teacher:
+    if not is_admin:
         today_question = conn.execute(
             "SELECT id FROM questions WHERE student_id = ? AND created_date = ? AND is_deleted = 0",
-            (student_id, kst_today())
+            (author_id, kst_today())
         ).fetchone()
 
     conn.close()
     return jsonify({
         'questions': result,
-        'already_posted_today': today_question is not None if (not is_admin and not is_teacher) else True,
+        'already_posted_today': today_question is not None if not is_admin else True,
         'date': target_date,
         'total_count': total_count,
         'page': page,
@@ -537,10 +540,12 @@ def get_questions():
 @app.route('/api/questions', methods=['POST'])
 @login_required
 def create_question():
-    if 'teacher_id' in session:
-        return jsonify({'error': '선생님 계정으로는 질문을 작성할 수 없습니다'}), 400
     if 'admin_id' in session and session.get('admin_student_mode'):
         return jsonify({'error': '관리자 모드에서는 질문을 작성할 수 없습니다'}), 400
+
+    author_id = session.get('teacher_id') or session.get('student_id')
+    if not author_id:
+        return jsonify({'error': '로그인이 필요합니다'}), 401
 
     data = request.json
     content = data.get('content', '').strip()
@@ -550,13 +555,12 @@ def create_question():
     if len(content) > 200:
         return jsonify({'error': '질문은 200자 이내로 작성해주세요'}), 400
 
-    student_id = session['student_id']
     today = kst_today()
 
     conn = get_db()
     existing = conn.execute(
         "SELECT id FROM questions WHERE student_id = ? AND created_date = ? AND is_deleted = 0",
-        (student_id, today)
+        (author_id, today)
     ).fetchone()
 
     if existing:
@@ -565,7 +569,7 @@ def create_question():
 
     conn.execute(
         "INSERT INTO questions (student_id, content, created_date) VALUES (?, ?, ?)",
-        (student_id, content, today)
+        (author_id, content, today)
     )
     conn.commit()
     conn.close()
@@ -579,7 +583,7 @@ def create_question():
 @login_required
 def update_question(question_id):
     is_admin = 'admin_id' in session and session.get('admin_student_mode')
-    student_id = session.get('student_id', 0)
+    student_id = session.get('teacher_id') or session.get('student_id', 0)
     data = request.json
     content = data.get('content', '').strip()
 
@@ -611,7 +615,7 @@ def update_question(question_id):
 @login_required
 def delete_question(question_id):
     is_admin = 'admin_id' in session and session.get('admin_student_mode')
-    student_id = session.get('student_id', 0)
+    student_id = session.get('teacher_id') or session.get('student_id', 0)
     conn = get_db()
 
     question = conn.execute(

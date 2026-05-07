@@ -329,7 +329,6 @@ function showMainScreen(user, role = 'student') {
     } else if (role === 'teacher' || isTeacherMode) {
         document.getElementById('user-info').textContent = `${user.name}`;
         document.getElementById('admin-mode-banner').style.display = 'none';
-        document.getElementById('question-form-container').style.display = 'none';
     } else {
         document.getElementById('user-info').textContent =
             `${user.grade}-${user.class_num} ${user.name}`;
@@ -535,7 +534,7 @@ async function loadQuestions() {
         const alreadyPosted = document.getElementById('already-posted');
         const today = isToday(currentDate);
 
-        if (isAdminMode || isTeacherMode) {
+        if (isAdminMode) {
             formContainer.style.display = 'none';
             alreadyPosted.style.display = 'none';
         } else if (!today) {
