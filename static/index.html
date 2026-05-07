@@ -167,6 +167,13 @@
 
             <!-- Grade Filter + Sort Buttons -->
             <div class="mb-3">
+                <!-- Name Search -->
+                <div class="relative mb-2">
+                    <input type="text" id="name-search" placeholder="이름으로 질문 검색"
+                        class="w-full pl-9 pr-9 py-2 border-2 border-[#FFD0A0] rounded-full text-sm font-body bg-white focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition placeholder:text-txt-lighter">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-txt-lighter pointer-events-none">&#128269;</span>
+                    <button type="button" id="name-search-clear" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-cream-dark text-txt-light hover:bg-pastel-orange hover:text-white text-xs font-bold flex items-center justify-center transition">&times;</button>
+                </div>
                 <!-- Grade Filter (Feature 1) -->
                 <div class="flex items-center gap-1.5 mb-2 flex-wrap">
                     <span class="text-sm font-bold text-txt-light mr-1">학년</span>

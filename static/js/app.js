@@ -2,7 +2,9 @@
 let currentDate = getLocalToday();
 let currentSort = 'latest';
 let currentGradeFilter = '';
+let currentNameSearch = '';
 let currentPage = 1;
+let nameSearchDebounce = null;
 let isAdminMode = false;
 let isTeacherMode = false;
 let currentRole = 'student';
@@ -83,6 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupQuestionForm();
     setupSortButtons();
     setupGradeFilter();  // Feature 1
+    setupNameSearch();
     setupDateNavigation();
     setupLogout();
     setupPastDates();
@@ -476,12 +479,55 @@ function setupGradeFilter() {
     }
 }
 
+// Name Search
+function setupNameSearch() {
+    const input = document.getElementById('name-search');
+    const clearBtn = document.getElementById('name-search-clear');
+    if (!input || !clearBtn) return;
+
+    const applySearch = (value) => {
+        currentNameSearch = value.trim();
+        currentPage = 1;
+        clearBtn.classList.toggle('hidden', !currentNameSearch);
+        loadQuestions();
+    };
+
+    input.addEventListener('input', (e) => {
+        const value = e.target.value;
+        clearBtn.classList.toggle('hidden', !value.trim());
+        clearTimeout(nameSearchDebounce);
+        nameSearchDebounce = setTimeout(() => applySearch(value), 300);
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(nameSearchDebounce);
+            applySearch(input.value);
+        } else if (e.key === 'Escape') {
+            input.value = '';
+            clearTimeout(nameSearchDebounce);
+            applySearch('');
+        }
+    });
+
+    clearBtn.addEventListener('click', () => {
+        input.value = '';
+        clearTimeout(nameSearchDebounce);
+        applySearch('');
+        input.focus();
+    });
+}
+
 // Load Questions
 async function loadQuestions() {
     try {
         let url = `/api/questions?date=${currentDate}&sort=${currentSort}&page=${currentPage}`;
         if (currentGradeFilter) {
             url += `&grade=${currentGradeFilter}`;
+        }
+        if (currentNameSearch) {
+            url += `&name=${encodeURIComponent(currentNameSearch)}`;
         }
         const data = await api(url);
 

@@ -420,6 +420,7 @@ def get_questions():
     target_date = request.args.get('date', kst_today())
     sort = request.args.get('sort', 'latest')
     grade_filter = request.args.get('grade', '')  # Feature 1: grade filter
+    name_search = request.args.get('name', '').strip()
     page = request.args.get('page', '1')
     page = max(1, int(page)) if page.isdigit() else 1
     per_page = 20
@@ -441,16 +442,28 @@ def get_questions():
         grade_clause = 'AND s.grade = ?'
         params.append(int(grade_filter))
 
+    name_clause = ''
+    if name_search:
+        like_pattern = '%' + name_search.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_') + '%'
+        name_clause = "AND s.name LIKE ? ESCAPE '\\'"
+        params.append(like_pattern)
+
     count_params = [target_date]
     count_grade_clause = ''
     if grade_filter and grade_filter.isdigit():
         count_grade_clause = 'AND s.grade = ?'
         count_params.append(int(grade_filter))
 
+    count_name_clause = ''
+    if name_search:
+        like_pattern = '%' + name_search.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_') + '%'
+        count_name_clause = "AND s.name LIKE ? ESCAPE '\\'"
+        count_params.append(like_pattern)
+
     total_count = conn.execute(f'''
         SELECT COUNT(*) FROM questions q
         JOIN students s ON q.student_id = s.id
-        WHERE q.created_date = ? AND q.is_deleted = 0 {count_grade_clause}
+        WHERE q.created_date = ? AND q.is_deleted = 0 {count_grade_clause} {count_name_clause}
     ''', count_params).fetchone()[0]
 
     total_pages = max(1, (total_count + per_page - 1) // per_page)
@@ -467,7 +480,7 @@ def get_questions():
         FROM questions q
         JOIN students s ON q.student_id = s.id
         LEFT JOIN likes l ON q.id = l.question_id
-        WHERE q.created_date = ? AND q.is_deleted = 0 {grade_clause}
+        WHERE q.created_date = ? AND q.is_deleted = 0 {grade_clause} {name_clause}
         GROUP BY q.id
         ORDER BY {order}
         LIMIT ? OFFSET ?
