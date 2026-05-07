@@ -324,7 +324,7 @@ function showMainScreen(user, role = 'student') {
         document.getElementById('admin-mode-banner').style.display = 'block';
         document.getElementById('question-form-container').style.display = 'none';
     } else if (role === 'teacher' || isTeacherMode) {
-        document.getElementById('user-info').textContent = `${user.name} 선생님`;
+        document.getElementById('user-info').textContent = `${user.name}`;
         document.getElementById('admin-mode-banner').style.display = 'none';
         document.getElementById('question-form-container').style.display = 'none';
     } else {
@@ -519,15 +519,14 @@ async function loadQuestions() {
         list.innerHTML = data.questions.map((q, i) => {
             const canEdit = q.can_edit || q.is_mine;
             const isAuthorTeacher = q.author_role === 'teacher';
-            const avatarClass = isAuthorTeacher ? 'bg-pastel-sky' : `grade-${q.grade}`;
-            const avatarText = isAuthorTeacher ? 'T' : q.grade;
+            const avatarHtml = isAuthorTeacher
+                ? `<div class="h-8 px-2.5 rounded-full flex items-center justify-center text-[11px] font-bold text-white bg-pastel-sky whitespace-nowrap">선생님</div>`
+                : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white grade-${q.grade}">${q.grade}</div>`;
             return `
             <div class="bg-white rounded-2xl shadow-md p-4 transition-all hover:shadow-lg border border-[#FFE8CC]/30 animate-slideUp ${q.is_mine ? 'border-l-4 border-l-pastel-orange bg-cream' : ''} ${isAdminMode && !q.is_mine ? 'border-l-4 border-l-red-300' : ''}" style="animation-delay: ${i * 0.05}s" id="question-card-${q.id}">
                 <div class="flex items-center justify-between mb-2.5">
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${avatarClass}">
-                            ${avatarText}
-                        </div>
+                        ${avatarHtml}
                         <div class="flex flex-col">
                             <span class="text-sm font-bold">${escapeHtml(q.author)}</span>
                             <span class="text-xs text-txt-lighter">${formatTime(q.created_at)}</span>

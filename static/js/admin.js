@@ -314,21 +314,20 @@ function renderStudents() {
 
         const isTeacher = s.role === 'teacher';
         const roleBadge = isTeacher
-            ? '<span class="text-[10px] font-bold bg-pastel-sky text-white px-1.5 py-0.5 rounded ml-1">교직원</span>'
+            ? '<span class="text-[10px] font-bold bg-pastel-sky text-white px-1.5 py-0.5 rounded ml-1">선생님</span>'
             : '<span class="text-[10px] font-bold bg-pastel-green text-white px-1.5 py-0.5 rounded ml-1">학생</span>';
-        const roleToggleLabel = isTeacher ? '학생으로' : '교직원으로';
+        const roleToggleLabel = isTeacher ? '학생으로' : '선생님으로';
         const nameDisplay = isTeacher
-            ? `${escapeHtml(s.name)} 선생님`
+            ? `${escapeHtml(s.name)}`
             : `${s.grade}-${s.class_num} ${escapeHtml(s.name)} (${s.student_num}번)`;
-        const avatarClass = isTeacher ? 'bg-pastel-sky' : `grade-${s.grade}`;
-        const avatarText = isTeacher ? 'T' : s.grade;
+        const avatarHtml = isTeacher
+            ? `<div class="h-8 px-2.5 rounded-full flex items-center justify-center text-[11px] font-bold text-white bg-pastel-sky whitespace-nowrap flex-shrink-0">선생님</div>`
+            : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 grade-${s.grade}">${s.grade}</div>`;
 
         return `
         <div class="flex items-center gap-3 px-3 py-3 rounded-xl border-b border-[#F5EDE5] last:border-b-0 hover:bg-cream transition">
             <input type="checkbox" class="student-checkbox w-4 h-4 cursor-pointer flex-shrink-0" value="${s.id}" onchange="updatePinSelectedCount()">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ${avatarClass}">
-                ${avatarText}
-            </div>
+            ${avatarHtml}
             <div class="flex-1 min-w-0">
                 <div class="text-sm font-bold">
                     ${nameDisplay}${roleBadge}
@@ -401,7 +400,7 @@ async function changeRole(studentId, name, currentRole) {
     const body = { role: newRole };
 
     if (newRole === 'teacher') {
-        if (!confirm(`'${name}'님을 교직원으로 변경할까요?\n질문에 표시되는 정보가 '선생님'으로 바뀝니다.`)) return;
+        if (!confirm(`'${name}'님을 선생님으로 변경할까요?\n질문에 표시되는 정보가 '선생님'으로 바뀝니다.`)) return;
     } else {
         const info = prompt(`'${name}'님을 학생으로 변경합니다.\n학년, 반, 번호를 입력하세요.\n(예: 3,2,15)`, '');
         if (!info) return;

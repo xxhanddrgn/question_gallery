@@ -482,7 +482,7 @@ def get_questions():
                        q['class_num'] == session.get('student_class'))
         author_role = q['role'] if q['role'] else 'student'
         if author_role == 'teacher':
-            author = f"{q['name']} 선생님"
+            author = f"{q['name']}"
         else:
             author = f"{q['grade']}-{q['class_num']} {q['name']}"
         result.append({
@@ -525,7 +525,7 @@ def get_questions():
 @login_required
 def create_question():
     if 'teacher_id' in session:
-        return jsonify({'error': '교직원 계정으로는 질문을 작성할 수 없습니다'}), 400
+        return jsonify({'error': '선생님 계정으로는 질문을 작성할 수 없습니다'}), 400
     if 'admin_id' in session and session.get('admin_student_mode'):
         return jsonify({'error': '관리자 모드에서는 질문을 작성할 수 없습니다'}), 400
 
@@ -625,7 +625,7 @@ def delete_question(question_id):
 @login_required
 def toggle_like(question_id):
     if 'teacher_id' in session:
-        return jsonify({'error': '교직원 계정으로는 좋아요를 할 수 없습니다'}), 400
+        return jsonify({'error': '선생님 계정으로는 좋아요를 할 수 없습니다'}), 400
     if 'admin_id' in session and session.get('admin_student_mode'):
         return jsonify({'error': '관리자 모드에서는 좋아요를 할 수 없습니다'}), 400
 
@@ -766,7 +766,7 @@ def admin_get_questions():
             'id': q['id'],
             'content': q['content'],
             'created_at': q['created_at'],
-            'author': f"{q['name']} 선생님" if q['role'] == 'teacher' else f"{q['grade']}-{q['class_num']} {q['name']} ({q['student_num']}번)",
+            'author': f"{q['name']}" if q['role'] == 'teacher' else f"{q['grade']}-{q['class_num']} {q['name']} ({q['student_num']}번)",
             'like_count': q['like_count'],
             'is_deleted': bool(q['is_deleted'])
         } for q in questions],
@@ -1133,14 +1133,14 @@ def admin_change_role(student_id):
     current_role = user['role'] or 'student'
     if current_role == new_role:
         conn.close()
-        return jsonify({'error': f'이미 {"교직원" if new_role == "teacher" else "학생"}입니다'}), 400
+        return jsonify({'error': f'이미 {"선생님" if new_role == "teacher" else "학생"}입니다'}), 400
 
     if new_role == 'teacher':
         conn.execute(
             "UPDATE students SET role = 'teacher', grade = 0, class_num = 0, student_num = 0 WHERE id = ?",
             (student_id,)
         )
-        msg = f"'{user['name']}'님이 교직원으로 변경되었습니다."
+        msg = f"'{user['name']}'님이 선생님으로 변경되었습니다."
     else:
         if not grade or not class_num or not student_num:
             conn.close()

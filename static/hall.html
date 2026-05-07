@@ -141,7 +141,7 @@
                             <div class="text-lg font-heading font-bold ${rank === 1 ? 'text-[#5C3300]' : 'text-white'} mb-2">${labels[rank-1]} <span class="text-sm font-body ${rank === 1 ? 'text-[#5C3300]/70' : 'text-white/70'}">${count}명</span></div>
                             <div class="flex flex-wrap justify-center gap-2">
                                 ${grouped[rank].map(r => {
-                                    const displayName = r.role === 'teacher' ? `${escapeHtml(r.name)} 선생님` : `${r.grade}-${r.class_num} ${escapeHtml(r.name)}`;
+                                    const displayName = r.role === 'teacher' ? `${escapeHtml(r.name)}` : `${r.grade}-${r.class_num} ${escapeHtml(r.name)}`;
                                     return `
                                     <div class="${rank === 1 ? 'bg-[#5C3300]/30' : 'bg-white/30'} backdrop-blur-sm rounded-xl px-4 py-2 ${r.is_me ? 'ring-2 ring-white' : ''}">
                                         <div class="text-sm font-bold ${rank === 1 ? 'text-[#3A1F00]' : 'text-white'}">${displayName}</div>
@@ -164,13 +164,14 @@
         if (rest.length > 0) {
             listEl.innerHTML = rest.map((r, i) => {
                 const isTeacher = r.role === 'teacher';
-                const displayName = isTeacher ? `${escapeHtml(r.name)} 선생님` : `${r.grade}-${r.class_num} ${escapeHtml(r.name)}`;
-                const avatarClass = isTeacher ? 'bg-pastel-sky' : `grade-${r.grade}`;
-                const avatarText = isTeacher ? 'T' : r.grade;
+                const displayName = isTeacher ? `${escapeHtml(r.name)}` : `${r.grade}-${r.class_num} ${escapeHtml(r.name)}`;
+                const avatarHtml = isTeacher
+                    ? `<div class="h-8 px-2.5 rounded-full flex items-center justify-center text-[11px] font-bold text-white bg-pastel-sky whitespace-nowrap">선생님</div>`
+                    : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white grade-${r.grade}">${r.grade}</div>`;
                 return `
                 <div class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl shadow-sm mb-2 border border-[#FFE8CC]/20 animate-slideUp ${r.is_me ? 'border-l-4 border-l-pastel-orange bg-cream' : ''}" style="animation-delay: ${i * 0.03}s">
                     <span class="text-lg font-heading font-bold text-txt-light min-w-[35px] text-center">${r.rank}</span>
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${avatarClass}">${avatarText}</div>
+                    ${avatarHtml}
                     <div class="flex-1">
                         <span class="text-sm font-bold">${displayName}</span>
                     </div>
