@@ -589,7 +589,7 @@ async function loadQuestions() {
                         ${q.liked_by_me
                             ? 'border-pastel-coral text-pastel-coral bg-red-50'
                             : 'border-[#FFD0A0] text-txt-light bg-white hover:border-pastel-coral hover:text-pastel-coral hover:bg-red-50'}"
-                        onclick="toggleLike(${q.id}, this)" ${(isAdminMode || isTeacherMode) ? 'disabled' : ''}>
+                        onclick="toggleLike(${q.id}, this)" ${isAdminMode ? 'disabled' : ''}>
                         <span class="heart text-base transition-transform ${q.liked_by_me ? 'text-pastel-coral' : 'text-txt-lighter'}">&#9829;</span>
                         <span class="like-count">${q.like_count}</span>
                     </button>
@@ -662,7 +662,7 @@ function renderPagination(page, totalPages, totalCount) {
 
 // Like
 async function toggleLike(questionId, btn) {
-    if (isAdminMode || isTeacherMode) return;
+    if (isAdminMode) return;
     if (btn.dataset.busy === '1') return;
     btn.dataset.busy = '1';
 

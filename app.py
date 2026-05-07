@@ -428,8 +428,8 @@ def get_questions():
     conn = get_db()
     is_admin = 'admin_id' in session and session.get('admin_student_mode')
     is_teacher = 'teacher_id' in session
-    student_id = 0 if (is_admin or is_teacher) else session.get('student_id', 0)
     author_id = session.get('teacher_id') if is_teacher else session.get('student_id', 0)
+    student_id = 0 if is_admin else author_id
 
     if sort == 'likes':
         order = 'like_count DESC, q.created_at DESC'
@@ -511,7 +511,7 @@ def get_questions():
             'class_num': q['class_num'],
             'author_role': author_role,
             'like_count': q['like_count'],
-            'liked_by_me': bool(q['liked_by_me']) if not is_teacher else False,
+            'liked_by_me': bool(q['liked_by_me']),
             'is_mine': is_mine,
             'can_edit': is_mine or is_admin,
         })
@@ -641,12 +641,13 @@ def delete_question(question_id):
 @app.route('/api/questions/<int:question_id>/like', methods=['POST'])
 @login_required
 def toggle_like(question_id):
-    if 'teacher_id' in session:
-        return jsonify({'error': '선생님 계정으로는 좋아요를 할 수 없습니다'}), 400
     if 'admin_id' in session and session.get('admin_student_mode'):
         return jsonify({'error': '관리자 모드에서는 좋아요를 할 수 없습니다'}), 400
 
-    student_id = session['student_id']
+    user_id = session.get('teacher_id') or session.get('student_id')
+    if not user_id:
+        return jsonify({'error': '로그인이 필요합니다'}), 401
+
     conn = get_db()
 
     question = conn.execute(
@@ -659,7 +660,7 @@ def toggle_like(question_id):
 
     existing = conn.execute(
         "SELECT id FROM likes WHERE question_id = ? AND student_id = ?",
-        (question_id, student_id)
+        (question_id, user_id)
     ).fetchone()
 
     if existing:
@@ -668,7 +669,7 @@ def toggle_like(question_id):
     else:
         conn.execute(
             "INSERT INTO likes (question_id, student_id) VALUES (?, ?)",
-            (question_id, student_id)
+            (question_id, user_id)
         )
         liked = True
 
