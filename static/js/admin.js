@@ -302,6 +302,13 @@ function renderStudents() {
             pinDisplay = '<span class="text-pastel-coral">미설정</span>';
         }
 
+        const totalQ = s.total_question_count;
+        const extraQ = s.extra_question_count;
+        let qDisplay = `질문 ${totalQ}개`;
+        if (extraQ !== 0) {
+            qDisplay += ` <span class="text-pastel-purple">(실제 ${s.question_count} ${extraQ > 0 ? '+' : ''}${extraQ})</span>`;
+        }
+
         return `
         <div class="flex items-center gap-3 px-3 py-3 rounded-xl border-b border-[#F5EDE5] last:border-b-0 hover:bg-cream transition">
             <input type="checkbox" class="student-checkbox w-4 h-4 cursor-pointer flex-shrink-0" value="${s.id}" onchange="updatePinSelectedCount()">
@@ -309,10 +316,14 @@ function renderStudents() {
                 ${s.grade}
             </div>
             <div class="flex-1 min-w-0">
-                <div class="text-sm font-bold">${s.grade}-${s.class_num} ${escapeHtml(s.name)} (${s.student_num}번)</div>
+                <div class="text-sm font-bold">
+                    ${s.grade}-${s.class_num} ${escapeHtml(s.name)} (${s.student_num}번)
+                    <button class="bg-pastel-sky text-white border-none px-1.5 py-0.5 rounded text-[10px] font-bold font-body cursor-pointer ml-1 hover:opacity-80" onclick="renameStudent(${s.id}, '${escapeHtml(s.name).replace(/'/g, "\\'")}')">이름수정</button>
+                </div>
                 <div class="text-xs text-txt-light">
-                    질문 ${s.question_count}개 &middot;
-                    비밀번호: ${pinDisplay}
+                    ${qDisplay}
+                    <button class="bg-pastel-purple text-white border-none px-1.5 py-0.5 rounded text-[10px] font-bold font-body cursor-pointer ml-1 hover:opacity-80" onclick="editQuestionCount(${s.id}, '${escapeHtml(s.name).replace(/'/g, "\\'")}', ${totalQ})">수정</button>
+                    &middot; 비밀번호: ${pinDisplay}
                 </div>
             </div>
             <div class="flex gap-1">
@@ -333,6 +344,37 @@ async function deleteStudent(studentId, studentName) {
     if (!confirm(`정말로 삭제하시겠습니까?`)) return;
     try {
         const data = await api(`/api/admin/students/${studentId}`, { method: 'DELETE' });
+        showToast(data.message);
+        loadStudents();
+        loadStats();
+    } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function renameStudent(studentId, currentName) {
+    const newName = prompt(`'${currentName}' 학생의 새 이름을 입력하세요:`, currentName);
+    if (!newName || newName.trim() === '' || newName.trim() === currentName) return;
+    try {
+        const data = await api(`/api/admin/students/${studentId}/rename`, {
+            method: 'POST',
+            body: JSON.stringify({ name: newName.trim() }),
+        });
+        showToast(data.message);
+        loadStudents();
+        loadStats();
+    } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function editQuestionCount(studentId, studentName, currentCount) {
+    const newCount = prompt(`'${studentName}' 학생의 질문 수를 입력하세요:\n(명예의 전당에 반영됩니다)`, currentCount);
+    if (newCount === null || newCount.trim() === '') return;
+    const count = parseInt(newCount.trim());
+    if (isNaN(count) || count < 0) { showToast('0 이상의 숫자를 입력해주세요', 'error'); return; }
+    if (count === currentCount) return;
+    try {
+        const data = await api(`/api/admin/students/${studentId}/update-question-count`, {
+            method: 'POST',
+            body: JSON.stringify({ question_count: count }),
+        });
         showToast(data.message);
         loadStudents();
         loadStats();

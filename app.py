@@ -110,6 +110,11 @@ def init_db():
     except sqlite3.OperationalError:
         conn.execute("ALTER TABLE students ADD COLUMN pin TEXT DEFAULT NULL")
 
+    try:
+        conn.execute("SELECT extra_question_count FROM students LIMIT 1")
+    except sqlite3.OperationalError:
+        conn.execute("ALTER TABLE students ADD COLUMN extra_question_count INTEGER DEFAULT 0")
+
     admin = conn.execute("SELECT id FROM admins WHERE username = 'admin'").fetchone()
     if not admin:
         pw_hash = hashlib.sha256('admin123'.encode()).hexdigest()
@@ -878,6 +883,7 @@ def admin_get_students():
     conn = get_db()
     students = conn.execute('''
         SELECT id, grade, class_num, student_num, name, pin, pin_hash,
+               COALESCE(extra_question_count, 0) as extra_question_count,
                (SELECT COUNT(*) FROM questions WHERE student_id = students.id AND is_deleted = 0) as question_count
         FROM students
         ORDER BY grade, class_num, student_num
@@ -893,7 +899,9 @@ def admin_get_students():
             'pin': s['pin'] if s['pin'] else None,
             'has_pin': s['pin'] is not None or s['pin_hash'] is not None,
             'pin_viewable': s['pin'] is not None,
-            'question_count': s['question_count']
+            'question_count': s['question_count'],
+            'extra_question_count': s['extra_question_count'],
+            'total_question_count': s['question_count'] + s['extra_question_count']
         } for s in students]
     })
 
@@ -919,6 +927,75 @@ def admin_delete_student(student_id):
     conn.commit()
     conn.close()
     return jsonify({'success': True, 'message': f"{student['grade']}-{student['class_num']} {student['name']} 학생의 계정이 삭제되었습니다."})
+
+
+@app.route('/api/admin/students/<int:student_id>/rename', methods=['POST'])
+@admin_required
+def admin_rename_student(student_id):
+    data = request.json
+    new_name = data.get('name', '').strip()
+    if not new_name:
+        return jsonify({'error': '이름을 입력해주세요'}), 400
+    if len(new_name) > 20:
+        return jsonify({'error': '이름은 20자 이내로 입력해주세요'}), 400
+
+    conn = get_db()
+    student = conn.execute("SELECT id, grade, class_num, student_num, name FROM students WHERE id = ?", (student_id,)).fetchone()
+    if not student:
+        conn.close()
+        return jsonify({'error': '학생을 찾을 수 없습니다'}), 404
+
+    existing = conn.execute(
+        "SELECT id FROM students WHERE grade=? AND class_num=? AND student_num=? AND name=? AND id!=?",
+        (student['grade'], student['class_num'], student['student_num'], new_name, student_id)
+    ).fetchone()
+    if existing:
+        conn.close()
+        return jsonify({'error': '같은 학년/반/번호에 동일한 이름의 학생이 이미 있습니다'}), 400
+
+    old_name = student['name']
+    conn.execute("UPDATE students SET name = ? WHERE id = ?", (new_name, student_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True, 'message': f"'{old_name}' → '{new_name}' (으)로 이름이 변경되었습니다."})
+
+
+@app.route('/api/admin/students/<int:student_id>/update-question-count', methods=['POST'])
+@admin_required
+def admin_update_question_count(student_id):
+    data = request.json
+    new_total = data.get('question_count')
+    if new_total is None:
+        return jsonify({'error': '질문 수를 입력해주세요'}), 400
+    try:
+        new_total = int(new_total)
+    except (ValueError, TypeError):
+        return jsonify({'error': '숫자를 입력해주세요'}), 400
+    if new_total < 0:
+        return jsonify({'error': '질문 수는 0 이상이어야 합니다'}), 400
+
+    conn = get_db()
+    student = conn.execute("SELECT id, name FROM students WHERE id = ?", (student_id,)).fetchone()
+    if not student:
+        conn.close()
+        return jsonify({'error': '학생을 찾을 수 없습니다'}), 404
+
+    actual_count = conn.execute(
+        "SELECT COUNT(*) as cnt FROM questions WHERE student_id = ? AND is_deleted = 0",
+        (student_id,)
+    ).fetchone()['cnt']
+
+    extra = new_total - actual_count
+    conn.execute("UPDATE students SET extra_question_count = ? WHERE id = ?", (extra, student_id))
+    conn.commit()
+    conn.close()
+    return jsonify({
+        'success': True,
+        'message': f"{student['name']} 학생의 질문 수가 {new_total}개로 설정되었습니다.",
+        'actual_count': actual_count,
+        'extra': extra,
+        'total': new_total
+    })
 
 
 # -- Admin Reset Hall of Fame --
@@ -982,11 +1059,12 @@ def hall_of_fame():
 
     ranking = conn.execute('''
         SELECT s.id, s.grade, s.class_num, s.student_num, s.name,
-               COUNT(q.id) as question_count
+               COUNT(q.id) + COALESCE(s.extra_question_count, 0) as question_count
         FROM students s
         JOIN questions q ON s.id = q.student_id AND q.is_deleted = 0
                         AND q.created_date >= ?
         GROUP BY s.id
+        HAVING question_count > 0
         ORDER BY question_count DESC, s.grade ASC, s.class_num ASC, s.student_num ASC
     ''', (hall_reset_date,)).fetchall()
 
