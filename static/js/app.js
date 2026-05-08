@@ -818,7 +818,7 @@ function startEditQuestion(questionId, btn) {
         <div class="flex items-center justify-between mt-1 mb-2">
             <span class="edit-char-count text-xs text-txt-lighter">${originalText.length}/200</span>
         </div>
-        <textarea id="edit-answer-${questionId}" placeholder="(내가 생각하는 답을 써보세요.)" class="w-full p-3 border-2 border-[#FFE0B2] rounded-xl text-sm font-body resize-none bg-white focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition" rows="3" maxlength="500">${escapeHtml(originalAnswer)}</textarea>
+        <textarea id="edit-answer-${questionId}" placeholder="내가 생각하는 답을 써보세요. (필수는 아니에요.)" class="w-full p-3 border-2 border-[#FFE0B2] rounded-xl text-sm font-body resize-none bg-white focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition" rows="3" maxlength="500">${escapeHtml(originalAnswer)}</textarea>
         <div class="flex items-center justify-between mt-2">
             <span class="edit-answer-char-count text-xs text-txt-lighter">${originalAnswer.length}/500</span>
             <div class="flex gap-1.5">
