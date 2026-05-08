@@ -421,6 +421,8 @@ function setupHomeButton() {
 function setupQuestionForm() {
     const textarea = document.getElementById('question-content');
     const charCount = document.getElementById('char-count');
+    const answerTextarea = document.getElementById('question-answer');
+    const answerCharCount = document.getElementById('answer-char-count');
 
     textarea.addEventListener('input', () => {
         charCount.textContent = `${textarea.value.length}/200`;
@@ -431,9 +433,19 @@ function setupQuestionForm() {
         }
     });
 
+    answerTextarea.addEventListener('input', () => {
+        answerCharCount.textContent = `${answerTextarea.value.length}/500`;
+        if (answerTextarea.value.length >= 450) {
+            answerCharCount.style.color = '#E07070';
+        } else {
+            answerCharCount.style.color = '';
+        }
+    });
+
     document.getElementById('question-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const content = textarea.value.trim();
+        const answer = answerTextarea.value.trim();
         if (!content) {
             showToast('질문을 입력해주세요', 'error');
             return;
@@ -442,11 +454,13 @@ function setupQuestionForm() {
         try {
             const data = await api('/api/questions', {
                 method: 'POST',
-                body: JSON.stringify({ content }),
+                body: JSON.stringify({ content, answer }),
             });
             showToast(data.message);
             textarea.value = '';
+            answerTextarea.value = '';
             charCount.textContent = '0/200';
+            answerCharCount.textContent = '0/500';
             loadQuestions();
         } catch (err) {
             showToast(err.message, 'error');
@@ -584,6 +598,11 @@ async function loadQuestions() {
                     </div>` : ''}
                 </div>
                 <div class="question-content-${q.id} text-base leading-relaxed mb-3 break-words">${escapeHtml(q.content)}</div>
+                ${q.answer ? `
+                <div class="question-answer-${q.id} mb-3 pl-3 border-l-4 border-pastel-yellow bg-cream/40 rounded-r-lg py-2 pr-3">
+                    <div class="text-xs font-bold text-pastel-orange mb-1">작성자의 답</div>
+                    <div class="text-sm leading-relaxed text-txt break-words whitespace-pre-wrap">${escapeHtml(q.answer)}</div>
+                </div>` : `<div class="question-answer-${q.id} hidden"></div>`}
                 <div class="flex items-center gap-3">
                     <button class="like-btn inline-flex items-center gap-1.5 px-4 py-1.5 border-2 rounded-full text-sm font-semibold cursor-pointer transition-all
                         ${q.liked_by_me
@@ -789,18 +808,27 @@ function goToDate(dateStr) {
 // Edit / Delete
 function startEditQuestion(questionId, btn) {
     const contentEl = document.querySelector(`.question-content-${questionId}`);
+    const answerEl = document.querySelector(`.question-answer-${questionId}`);
     const originalText = contentEl.textContent.trim();
+    const answerInner = answerEl ? answerEl.querySelector('.text-sm') : null;
+    const originalAnswer = answerInner ? answerInner.textContent.trim() : '';
 
     contentEl.innerHTML = `
         <textarea id="edit-textarea-${questionId}" class="w-full p-3 border-2 border-pastel-orange rounded-xl text-base font-body resize-none bg-white focus:outline-none focus:ring-2 focus:ring-pastel-orange/20 transition" rows="3" maxlength="200">${escapeHtml(originalText)}</textarea>
-        <div class="flex items-center justify-between mt-2">
+        <div class="flex items-center justify-between mt-1 mb-2">
             <span class="edit-char-count text-xs text-txt-lighter">${originalText.length}/200</span>
+        </div>
+        <textarea id="edit-answer-${questionId}" placeholder="(내가 생각하는 답을 써보세요.)" class="w-full p-3 border-2 border-[#FFE0B2] rounded-xl text-sm font-body resize-none bg-white focus:outline-none focus:border-pastel-orange focus:ring-2 focus:ring-pastel-orange/20 transition" rows="3" maxlength="500">${escapeHtml(originalAnswer)}</textarea>
+        <div class="flex items-center justify-between mt-2">
+            <span class="edit-answer-char-count text-xs text-txt-lighter">${originalAnswer.length}/500</span>
             <div class="flex gap-1.5">
-                <button class="px-3.5 py-1.5 rounded-lg text-xs font-bold border border-[#E0D0C0] text-txt-light bg-white hover:bg-cream-dark transition" onclick="cancelEdit(${questionId}, '${escapeHtml(originalText).replace(/'/g, "\\'")}'")>취소</button>
+                <button class="px-3.5 py-1.5 rounded-lg text-xs font-bold border border-[#E0D0C0] text-txt-light bg-white hover:bg-cream-dark transition" onclick="cancelEdit(${questionId})">취소</button>
                 <button class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-pastel-orange to-pastel-coral text-white hover:opacity-90 transition" onclick="saveEditQuestion(${questionId})">저장</button>
             </div>
         </div>
     `;
+
+    if (answerEl) answerEl.classList.add('hidden');
 
     const textarea = document.getElementById(`edit-textarea-${questionId}`);
     textarea.focus();
@@ -808,16 +836,22 @@ function startEditQuestion(questionId, btn) {
     textarea.addEventListener('input', () => {
         contentEl.querySelector('.edit-char-count').textContent = `${textarea.value.length}/200`;
     });
+
+    const answerTa = document.getElementById(`edit-answer-${questionId}`);
+    answerTa.addEventListener('input', () => {
+        contentEl.querySelector('.edit-answer-char-count').textContent = `${answerTa.value.length}/500`;
+    });
 }
 
-function cancelEdit(questionId, originalText) {
-    const contentEl = document.querySelector(`.question-content-${questionId}`);
-    contentEl.textContent = originalText;
+function cancelEdit(questionId) {
+    loadQuestions();
 }
 
 async function saveEditQuestion(questionId) {
     const textarea = document.getElementById(`edit-textarea-${questionId}`);
+    const answerTa = document.getElementById(`edit-answer-${questionId}`);
     const content = textarea.value.trim();
+    const answer = answerTa ? answerTa.value.trim() : '';
 
     if (!content) {
         showToast('질문을 입력해주세요', 'error');
@@ -827,7 +861,7 @@ async function saveEditQuestion(questionId) {
     try {
         const data = await api(`/api/questions/${questionId}`, {
             method: 'PUT',
-            body: JSON.stringify({ content }),
+            body: JSON.stringify({ content, answer }),
         });
         showToast(data.message);
         loadQuestions();

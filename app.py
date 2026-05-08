@@ -128,6 +128,11 @@ def init_db():
     except sqlite3.OperationalError:
         conn.execute("ALTER TABLE students ADD COLUMN role TEXT DEFAULT 'student'")
 
+    try:
+        conn.execute("SELECT answer FROM questions LIMIT 1")
+    except sqlite3.OperationalError:
+        conn.execute("ALTER TABLE questions ADD COLUMN answer TEXT DEFAULT NULL")
+
     admin = conn.execute("SELECT id FROM admins WHERE username = 'admin'").fetchone()
     if not admin:
         pw_hash = hashlib.sha256('admin123'.encode()).hexdigest()
@@ -473,7 +478,7 @@ def get_questions():
     offset = (page - 1) * per_page
 
     questions = conn.execute(f'''
-        SELECT q.id, q.content, q.created_at, q.created_date, q.student_id,
+        SELECT q.id, q.content, q.answer, q.created_at, q.created_date, q.student_id,
                s.grade, s.class_num, s.student_num, s.name,
                COALESCE(s.role, 'student') as role,
                COUNT(DISTINCT l.id) as like_count,
@@ -504,6 +509,7 @@ def get_questions():
         result.append({
             'id': q['id'],
             'content': q['content'],
+            'answer': q['answer'],
             'created_at': q['created_at'],
             'created_date': q['created_date'],
             'author': author,
@@ -549,11 +555,14 @@ def create_question():
 
     data = request.json
     content = data.get('content', '').strip()
+    answer = (data.get('answer') or '').strip()
 
     if not content:
         return jsonify({'error': '질문 내용을 입력해주세요'}), 400
     if len(content) > 200:
         return jsonify({'error': '질문은 200자 이내로 작성해주세요'}), 400
+    if len(answer) > 500:
+        return jsonify({'error': '답은 500자 이내로 작성해주세요'}), 400
 
     today = kst_today()
 
@@ -568,8 +577,8 @@ def create_question():
         return jsonify({'error': '오늘은 이미 질문을 올렸어요! 내일 다시 도전해보세요'}), 400
 
     conn.execute(
-        "INSERT INTO questions (student_id, content, created_date) VALUES (?, ?, ?)",
-        (author_id, content, today)
+        "INSERT INTO questions (student_id, content, created_date, answer) VALUES (?, ?, ?, ?)",
+        (author_id, content, today, answer or None)
     )
     conn.commit()
     conn.close()
@@ -586,11 +595,16 @@ def update_question(question_id):
     student_id = session.get('teacher_id') or session.get('student_id', 0)
     data = request.json
     content = data.get('content', '').strip()
+    answer_raw = data.get('answer')
+    answer_provided = 'answer' in data
+    answer = (answer_raw or '').strip() if answer_provided else None
 
     if not content:
         return jsonify({'error': '질문 내용을 입력해주세요'}), 400
     if len(content) > 200:
         return jsonify({'error': '질문은 200자 이내로 작성해주세요'}), 400
+    if answer_provided and answer and len(answer) > 500:
+        return jsonify({'error': '답은 500자 이내로 작성해주세요'}), 400
 
     conn = get_db()
     question = conn.execute(
@@ -605,7 +619,13 @@ def update_question(question_id):
         conn.close()
         return jsonify({'error': '본인의 질문만 수정할 수 있습니다'}), 403
 
-    conn.execute("UPDATE questions SET content = ? WHERE id = ?", (content, question_id))
+    if answer_provided:
+        conn.execute(
+            "UPDATE questions SET content = ?, answer = ? WHERE id = ?",
+            (content, answer or None, question_id)
+        )
+    else:
+        conn.execute("UPDATE questions SET content = ? WHERE id = ?", (content, question_id))
     conn.commit()
     conn.close()
     return jsonify({'success': True, 'message': '질문이 수정되었어요!'})
