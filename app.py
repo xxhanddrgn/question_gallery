@@ -10,6 +10,16 @@ from functools import wraps
 from flask import Flask, request, jsonify, session, send_from_directory, Response
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
+
+@app.after_request
+def add_no_cache_headers(response):
+    if request.path == '/' or request.path.startswith('/static/'):
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    return response
 
 SECRET_KEY_FILE = os.path.join(os.path.dirname(__file__), 'data', '.secret_key')
 
